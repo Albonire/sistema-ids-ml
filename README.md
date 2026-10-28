@@ -49,14 +49,32 @@ proyecto/
 |-- models/                # Modelos exportados (.joblib, ignorado en Git)
 |-- notebooks/             # Cuadernos Jupyter para EDA y pruebas preliminares
 |-- src/                   # Codigo fuente modular del prototipo
-|   |-- train.py           # Pipeline de entrenamiento multimodelo
-|   |-- predict.py         # Motor de inferencia para flujos nuevos
-|   `-- evaluate.py        # Generacion de graficos, ROC y matrices
+|   |-- config.py          # Rutas, constantes y fuente del dataset
+|   |-- download_data.py   # Descarga verificada (SHA256) de CICIDS2017
+|   |-- preprocess.py      # Limpieza del dataset
+|   |-- data_loader.py     # Carga y particion 70/30 estratificada
+|   |-- train.py           # (fase 2) Pipeline de entrenamiento multimodelo
+|   |-- predict.py         # (fase 2) Motor de inferencia para flujos nuevos
+|   `-- evaluate.py        # (fase 2) Graficos, ROC y matrices
+|-- tests/                 # Pruebas unitarias (pytest)
 |-- .gitignore             # Filtros de exclusion para Git
 |-- AGENT.md               # Directivas maestras para agentes y desarrollo
 |-- README.md              # Descripcion general del repositorio
 `-- requirements.txt       # Dependencias de Python
 ```
+
+---
+
+## Uso: Fase 1 (pipeline de datos)
+
+```bash
+python -m src.download_data    # descarga y verifica los CSV en data/raw/
+python -m src.preprocess       # genera data/processed/cicids2017_clean.parquet
+pip install -r requirements-dev.txt
+pytest -q                      # pruebas unitarias
+```
+
+Detalles y decisiones en [docs/fase1_pipeline_datos.md](docs/fase1_pipeline_datos.md) y [data/README.md](data/README.md).
 
 ---
 
