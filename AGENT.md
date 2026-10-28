@@ -8,7 +8,7 @@
   - Fabian (Coordinación, Arquitectura de Software y Pipeline)
   - Silvana - GitHub: `inana20` (Investigación, Preprocesamiento y Modelos)
   - Raul - GitHub: `Raul-2112` (Métricas, Evaluación de Resultados y Documentación)
-- **Fase actual**: Fase de Análisis y Planificación (Preparación del Entregable 1, Semana 6).
+- **Fase actual**: Implementación del prototipo (Entregable 2, semanas 10 a 12). El Entregable 1 (`Entregable1_IDS_Proyecto_actualizado.docx`) ya fue presentado a la docente.
 
 ---
 
@@ -34,8 +34,8 @@ El aprendizaje automático permite modelar las relaciones estadísticas multivar
 Desarrollar un prototipo basado en aprendizaje automático capaz de identificar y clasificar tráfico de red normal y malicioso.
 
 ### 3.2 Objetivos Específicos
-1. Descargar, limpiar y normalizar un dataset público de tráfico de red representativo (CICIDS2017 como fuente principal, UNSW-NB15 como alternativa de contraste), seleccionando las características más discriminatorias.
-2. Entrenar y comparar cuatro algoritmos de clasificación de diversa naturaleza: Random Forest, Support Vector Machines (SVM), Árboles de Decisión (CART) y Multi-Layer Perceptron (MLP).
+1. Descargar, limpiar y preparar dos datasets públicos de tráfico de red: UNSW-NB15 (dataset principal declarado en el Entregable 1) y CICIDS2017 (contraste y validación de estabilidad), con evaluación libre de fuga de datos.
+2. Entrenar y comparar Random Forest, XGBoost y un ensamble por votación suave de ambos (mix). Por indicación de la docente se limita el alcance a pocos modelos, y el aporte distintivo es mejorar lo reportado en los antecedentes: cada modelo se entrena en versión base (configuración típica de la literatura) y en versión mejorada (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral de decisión calibrado en validación). SVM, MLP y CART quedan fuera de alcance.
 3. Evaluar cuantitativamente el rendimiento de cada modelo mediante métricas formales (Accuracy, Precision, Recall, F1-score y False Positive Rate), analizando de forma rigurosa la frontera entre detección efectiva y falsas alarmas.
 4. Construir un prototipo funcional en Python (`train.py`, `predict.py`, `evaluate.py`) estructurado para operar tanto por lotes como en inferencia sobre flujos individuales.
 
@@ -44,18 +44,17 @@ Desarrollar un prototipo basado en aprendizaje automático capaz de identificar 
 ## 4. Datasets y Estrategia de Datos
 
 ### 4.1 Datasets de Referencia
-- **CICIDS2017 (Canadian Institute for Cybersecurity)**:
+- **UNSW-NB15 (Universidad de Nueva Gales del Sur)**: dataset principal del Entregable 1. Se usan las particiones oficiales de entrenamiento y prueba (257,673 flujos, 42 variables más 3 categóricas: `proto`, `service`, `state`), unidas y repartidas de nuevo en 70/15/15. Categorías de ataque reales: Fuzzers, Analysis, Backdoor, DoS, Exploits, Generic, Reconnaissance, Shellcode y Worms.
+- **CICIDS2017 (Canadian Institute for Cybersecurity)**: dataset de contraste.
   - Generado mediante la herramienta CICFlowMeter a partir de capturas de red reales (archivos PCAP).
   - Incluye más de 80 características estadísticas de flujos de red bidireccionales.
   - Cubre tráfico benigno y múltiples familias de agresión: DoS/DDoS, PortScan, Brute Force (SSH/FTP), Web Attacks (XSS, SQL Injection), Botnet e Infiltration.
-- **UNSW-NB15 (Universidad de Nueva Gales del Sur)**:
-  - Dataset complementario con ataques modernos sintéticos y tráfico de fondo contemporáneo.
-  - Utilizado como referencia secundaria para verificar estabilidad y evitar sesgos de captura.
 
 ### 4.2 Protocolo de Manejo de Datos
 - **Aislamiento en Git**: Los archivos de datos crudos (`.pcap`, `.csv`, `.parquet`) están excluidos del control de versiones mediante `.gitignore` para preservar la ligereza del repositorio.
-- **Reproducibilidad**: Se mantendrán scripts de descarga y limpieza deterministas en la carpeta `data/` con semillas fijas (`random_state=42`).
-- **Limpieza rigurosa**: Tratamiento de valores infinitos, eliminación de valores faltantes (NaN), normalización numérica (StandardScaler o MinMaxScaler) y codificación de etiquetas (0 para normal, 1 para intrusión).
+- **Reproducibilidad**: Scripts deterministas (`python -m src.download_data`, `python -m src.preprocess`) con descarga verificada por SHA256 y semillas fijas (`random_state=42`).
+- **Limpieza rigurosa**: Tratamiento de valores infinitos, eliminación de valores faltantes (NaN), duplicados exactos, vectores con etiquetas contradictorias y columnas constantes, y codificación de etiquetas (0 para normal, 1 para intrusión; el tipo de ataque se conserva en `attack_type`).
+- **Partición**: 70 % entrenamiento, 15 % validación y 15 % prueba, estratificada por tipo de ataque. El conjunto de prueba no se usa para ajustar nada. Todo paso que aprenda de los datos (filtro de correlación, codificador, hiperparámetros, umbral) se ajusta solo con entrenamiento o validación.
 
 ---
 
@@ -63,10 +62,11 @@ Desarrollar un prototipo basado en aprendizaje automático capaz de identificar 
 
 | Algoritmo | Categoría | Justificación Técnica | Desafío Previsto |
 |---|---|---|---|
-| **Random Forest** | Ensamble (Bagging) | Alta estabilidad en datos tabulares, resistente al sobreajuste y proporciona ranking de importancia de características. | Tamaño del modelo serializado en memoria. |
-| **Support Vector Machines (SVM)** | Margen Máximo | Efectivo en fronteras de decisión complejas mediante funciones de kernel (RBF / Lineal). | Alto costo computacional durante el entrenamiento en datasets masivos. |
-| **Árboles de Decisión (CART)** | Basado en Reglas | Máxima interpretabilidad: permite auditar exactamente qué umbrales determinan una alerta. | Tendencia a sobreajustar sin poda adecuada. |
-| **Multi-Layer Perceptron (MLP)** | Red Neuronal Artificial | Capaz de modelar interacciones no lineales complejas entre flujos de tráfico. | Requiere ajuste cuidadoso de hiperparámetros y normalización estricta. |
+| **Random Forest** | Ensamble (Bagging) | Alta estabilidad en datos tabulares, resistente al sobreajuste y proporciona ranking de importancia de características. | Tamaño del modelo serializado. |
+| **XGBoost** | Ensamble (Boosting) | Referencia en datos tabulares, reportado como el mejor en estudios recientes sobre UNSW-NB15. | Sensibilidad a hiperparámetros. |
+| **Mix (RF + XGBoost)** | Ensamble por votación suave | Promedia las probabilidades de ambos modelos para combinar sus errores distintos. | Doble costo de inferencia. |
+
+Cada modelo existe en dos versiones: **base** (RF con `n_estimators=100`; XGBoost con `n_estimators=100`, `max_depth=5`; umbral 0.5, como en la sección 8.4 del Entregable 1) y **mejorada** (filtro de correlación |r| > 0.95, búsqueda aleatoria de hiperparámetros con validación cruzada estratificada de 5 folds y umbral calibrado en validación).
 
 ---
 
@@ -86,6 +86,8 @@ Para responder a la pregunta de investigación, se adoptan las siguientes defini
 4. **F1-Score**: $2 \times (\text{Precision} \times \text{Recall}) / (\text{Precision} + \text{Recall})$ (balance armónico).
 5. **False Positive Rate (FPR)**: $FP / (FP + TN)$ (tasa de falsas alarmas, indicador central del proyecto).
 
+Métricas complementarias: ROC-AUC y PR-AUC (independientes del umbral), y tasa de detección por tipo de ataque.
+
 > **Criterio de Decisión**: El algoritmo óptimo no será necesariamente el de mayor Accuracy global, sino aquel que minimice el FPR mientras mantiene un Recall superior a un umbral predefinido (ej. Recall >= 0.95 y FPR <= 0.02).
 
 ---
@@ -94,39 +96,44 @@ Para responder a la pregunta de investigación, se adoptan las siguientes defini
 
 ```
 proyecto/
-|-- data/                  # Directorio local de datos (ignorado por Git)
-|   |-- raw/               # Archivos CSV descargados sin modificar
-|   `-- processed/         # Datasets limpios y preprocesados
-|-- docs/                  # Documentacion academica, diagramas y referencias
-|-- models/                # Modelos exportados (.joblib, ignorado por Git)
-|-- notebooks/             # Cuadernos Jupyter para analisis exploratorio (EDA)
-|-- src/                   # Codigo fuente modular del prototipo
-|   |-- __init__.py
-|   |-- data_loader.py     # Carga y particionado determinista
-|   |-- train.py           # Pipeline de entrenamiento multimodelo
-|   |-- predict.py         # Motor de inferencia en tiempo real o batch
-|   |-- evaluate.py        # Generacion de metricas, matrices y graficos
-|   `-- utils/             # Funciones auxiliares y transformaciones
-|-- .gitignore             # Exclusion estricta de datos, venv y modelos pesados
-|-- AGENT.md               # Este archivo maestro de directivas
-|-- README.md              # Presentacion publica del repositorio
-`-- requirements.txt       # Dependencias verificadas de Python
+|-- data/                  # Datos locales (ignorados por Git, salvo README)
+|   |-- raw/<dataset>/     # CSV descargados sin modificar
+|   `-- processed/         # Parquet limpios y reportes de limpieza
+|-- docs/                  # Documentacion tecnica y antecedentes
+|-- models/<dataset>/      # best_model.joblib y puntajes (ignorados por Git)
+|-- notebooks/             # Analisis exploratorio (EDA)
+|-- reports/<dataset>/     # Metricas, figuras y resultados.md (versionados)
+|-- src/
+|   |-- config.py          # Rutas, constantes y fuentes de datos
+|   |-- download_data.py   # Descarga verificada por SHA256
+|   |-- preprocess.py      # Limpieza
+|   |-- data_loader.py     # Carga y particion 70/15/15
+|   |-- features.py        # Filtro de correlacion y codificacion
+|   |-- models.py          # Modelos base, mejorados y mix
+|   |-- metrics.py         # Metricas, umbral y bootstrap
+|   |-- train.py           # Entrenamiento y seleccion del mejor modelo
+|   |-- predict.py         # Inferencia por lotes o flujo individual
+|   |-- evaluate.py        # Figuras y resultados.md
+|   `-- utils/             # Hash de archivos y escaladores
+|-- tests/                 # Pruebas unitarias (pytest)
+|-- AGENT.md
+|-- README.md
+|-- requirements.txt
+`-- requirements-dev.txt
 ```
 
 ### Funciones de los Módulos Principales
-- **`src/train.py`**:
-  - Carga el dataset procesado y realiza la partición train/test (70/30).
-  - Entrena concurrentemente o secuencialmente los 4 algoritmos configurados.
-  - Calcula las métricas sobre el conjunto de prueba y genera la tabla comparativa.
-  - Guarda el modelo con el mejor balance en `models/best_model.joblib`.
-- **`src/predict.py`**:
-  - Carga `models/best_model.joblib`.
-  - Recibe un archivo de flujos o un vector individual de características.
-  - Emite la clasificación: `"Trafico Normal"` o `"Ataque Detectado"`, junto con la probabilidad calculada.
-- **`src/evaluate.py`**:
-  - Produce las matrices de confusión normalizadas.
-  - Genera las curvas ROC (Receiver Operating Characteristic) y Precision-Recall.
-  - Grafica la comparativa de FPR entre algoritmos para el informe final.
+- **`src/train.py`** (`python -m src.train --dataset <unsw_nb15|cicids2017>`):
+  - Carga el dataset procesado y lo parte en 70/15/15.
+  - Entrena las versiones base y mejorada de RF y XGBoost, y los dos mix.
+  - Calibra el umbral de cada modelo en validación (mínimo FPR con Recall >= 0.95).
+  - Elige el mejor modelo con validación y guarda `models/<dataset>/best_model.joblib`, `reports/<dataset>/metrics.csv` y `training_summary.json`.
+- **`src/predict.py`** (`python -m src.predict --dataset <...> --input flujos.csv` o `--json '{...}'`):
+  - Carga el mejor modelo y su umbral.
+  - Emite `"Trafico Normal"` o `"Ataque Detectado"` con la probabilidad calculada.
+- **`src/evaluate.py`** (`python -m src.evaluate --dataset <...>`):
+  - Matrices de confusión normalizadas, curvas ROC y Precision-Recall, comparativa FPR/Recall, detección por tipo de ataque e importancia de características.
+  - Escribe `reports/<dataset>/resultados.md` con intervalos de confianza bootstrap.
 
 ---
 

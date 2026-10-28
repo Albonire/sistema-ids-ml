@@ -22,19 +22,20 @@ Proyecto desarrollado para la asignatura **Seguridad Informática**.
 
 ## Modelos Evaluados
 
-1. **Random Forest**: Ensamble basado en árboles para datos tabulares de alta dimensionalidad.
-2. **Support Vector Machines (SVM)**: Clasificación de margen máximo con funciones de kernel.
-3. **Árboles de Decisión (CART)**: Modelo base interpretable para extracción de reglas.
-4. **Multi-Layer Perceptron (MLP)**: Red neuronal artificial para relaciones no lineales complejas.
+1. **Random Forest**: Ensamble basado en árboles para datos tabulares.
+2. **XGBoost**: Gradient boosting, referencia en datos tabulares.
+3. **Mix (RF + XGBoost)**: Votación suave de ambos.
+
+Cada uno en versión **base** (configuración típica de la literatura) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral calibrado en validación).
 
 ---
 
 ## Datasets
 
-- **CICIDS2017**: Tráfico de red con flujos bidireccionales y vectores de ataque modernos (DoS/DDoS, PortScan, Brute Force, Web Attacks, Botnets).
-- **UNSW-NB15**: Dataset complementario de validación.
+- **UNSW-NB15**: Dataset principal (Entregable 1). 9 familias de ataque más tráfico normal.
+- **CICIDS2017**: Dataset de contraste. Flujos con 69 variables útiles y 14 familias de ataque.
 
-*Nota: Los archivos de datos crudos no se almacenan en este repositorio por restricciones de tamaño y buenas prácticas. Consultar la documentación en `data/` para instrucciones de descarga y procesamiento.*
+*Nota: Los archivos de datos crudos no se almacenan en este repositorio. Ver [data/README.md](data/README.md).*
 
 ---
 
@@ -42,39 +43,44 @@ Proyecto desarrollado para la asignatura **Seguridad Informática**.
 
 ```
 proyecto/
-|-- data/                  # Almacenamiento local de datasets (ignorado en Git)
-|   |-- raw/               # Datos crudos (.csv, .pcap)
-|   `-- processed/         # Datos limpios y normalizados
-|-- docs/                  # Documentacion academica y diagramas
-|-- models/                # Modelos exportados (.joblib, ignorado en Git)
-|-- notebooks/             # Cuadernos Jupyter para EDA y pruebas preliminares
+|-- data/                  # Datos locales (ignorados en Git, salvo data/README.md)
+|   |-- raw/<dataset>/     # CSV descargados
+|   `-- processed/         # Parquet limpios y reportes de limpieza
+|-- docs/                  # Documentacion tecnica y antecedentes
+|-- models/<dataset>/      # Mejor modelo y puntajes (ignorado en Git)
+|-- notebooks/             # EDA (Jupyter)
+|-- reports/<dataset>/     # Metricas, figuras y resultados.md
 |-- src/                   # Codigo fuente modular del prototipo
-|   |-- config.py          # Rutas, constantes y fuente del dataset
-|   |-- download_data.py   # Descarga verificada (SHA256) de CICIDS2017
-|   |-- preprocess.py      # Limpieza del dataset
-|   |-- data_loader.py     # Carga y particion 70/30 estratificada
-|   |-- train.py           # (fase 2) Pipeline de entrenamiento multimodelo
-|   |-- predict.py         # (fase 2) Motor de inferencia para flujos nuevos
-|   `-- evaluate.py        # (fase 2) Graficos, ROC y matrices
+|   |-- config.py          # Rutas, constantes y fuentes de datos
+|   |-- download_data.py   # Descarga verificada (SHA256)
+|   |-- preprocess.py      # Limpieza
+|   |-- data_loader.py     # Carga y particion 70/15/15 estratificada
+|   |-- features.py        # Filtro de correlacion y codificacion
+|   |-- models.py          # Modelos base, mejorados y mix
+|   |-- metrics.py         # Metricas, umbral calibrado e intervalos bootstrap
+|   |-- train.py           # Entrenamiento multimodelo
+|   |-- predict.py         # Inferencia por lotes o flujo individual
+|   `-- evaluate.py        # Figuras, ROC y resultados.md
 |-- tests/                 # Pruebas unitarias (pytest)
-|-- .gitignore             # Filtros de exclusion para Git
 |-- AGENT.md               # Directivas maestras para agentes y desarrollo
-|-- README.md              # Descripcion general del repositorio
 `-- requirements.txt       # Dependencias de Python
 ```
 
 ---
 
-## Uso: Fase 1 (pipeline de datos)
+## Uso
 
 ```bash
-python -m src.download_data    # descarga y verifica los CSV en data/raw/
-python -m src.preprocess       # genera data/processed/cicids2017_clean.parquet
 pip install -r requirements-dev.txt
-pytest -q                      # pruebas unitarias
+python -m src.download_data --dataset all            # descarga y verifica los CSV
+python -m src.preprocess --dataset all               # limpieza a data/processed/
+python -m src.train --dataset unsw_nb15              # entrena y elige el mejor modelo
+python -m src.evaluate --dataset unsw_nb15           # figuras y reports/unsw_nb15/resultados.md
+python -m src.predict --dataset unsw_nb15 --input flujos.csv
+pytest -q                                            # pruebas unitarias
 ```
 
-Detalles y decisiones en [docs/fase1_pipeline_datos.md](docs/fase1_pipeline_datos.md) y [data/README.md](data/README.md).
+Reemplazar `unsw_nb15` por `cicids2017` para el segundo dataset. Detalles en [docs/fase1_pipeline_datos.md](docs/fase1_pipeline_datos.md), [docs/fase2_modelos.md](docs/fase2_modelos.md) y [data/README.md](data/README.md).
 
 ---
 
