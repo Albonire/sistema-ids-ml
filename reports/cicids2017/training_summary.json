@@ -1,0 +1,200 @@
+{
+  "dataset": "cicids2017",
+  "random_state": 42,
+  "split_sizes": {
+    "train": 1747580,
+    "val": 374482,
+    "test": 374482
+  },
+  "recall_target": 0.95,
+  "fpr_target": 0.02,
+  "best_model": "xgb_improved",
+  "best_model_fpr_budget": "xgb_improved",
+  "thresholds": {
+    "rf_baseline": {
+      "default": 0.5,
+      "recall_target": 1.0,
+      "fpr_budget": 0.01
+    },
+    "rf_improved": {
+      "default": 0.5,
+      "recall_target": 0.9484090012095517,
+      "fpr_budget": 0.029286290141975063
+    },
+    "xgb_baseline": {
+      "default": 0.5,
+      "recall_target": 0.9912121891975403,
+      "fpr_budget": 0.0063753919675946236
+    },
+    "xgb_improved": {
+      "default": 0.5,
+      "recall_target": 0.9909047484397888,
+      "fpr_budget": 0.008164875209331512
+    },
+    "mix_baseline": {
+      "default": 0.5,
+      "recall_target": 0.9941196393966675,
+      "fpr_budget": 0.013187695983797312
+    },
+    "mix_improved": {
+      "default": 0.5,
+      "recall_target": 0.9693166409184324,
+      "fpr_budget": 0.03449375116975863
+    }
+  },
+  "n_iter": 8,
+  "tune_sample": 60000,
+  "cv_folds": 5,
+  "models": {
+    "rf_baseline": {
+      "label": "Random Forest (baseline)",
+      "fit_seconds": 243.9,
+      "best_params": {},
+      "cv_average_precision": null,
+      "note": ""
+    },
+    "rf_improved": {
+      "label": "Random Forest (improved)",
+      "fit_seconds": 449.7,
+      "best_params": {
+        "clf__n_estimators": 100,
+        "clf__min_samples_leaf": 1,
+        "clf__max_features": "sqrt",
+        "clf__max_depth": 12
+      },
+      "cv_average_precision": 0.9993947298798304,
+      "note": ""
+    },
+    "xgb_baseline": {
+      "label": "XGBoost (baseline)",
+      "fit_seconds": 17.0,
+      "best_params": {},
+      "cv_average_precision": null,
+      "note": ""
+    },
+    "xgb_improved": {
+      "label": "XGBoost (improved)",
+      "fit_seconds": 181.5,
+      "best_params": {
+        "clf__subsample": 0.85,
+        "clf__n_estimators": 600,
+        "clf__min_child_weight": 5,
+        "clf__max_depth": 6,
+        "clf__learning_rate": 0.05,
+        "clf__colsample_bytree": 1.0
+      },
+      "cv_average_precision": 0.9996671288011377,
+      "note": ""
+    },
+    "mix_baseline": {
+      "label": "Mix (RF + XGB) (baseline)",
+      "fit_seconds": 0.0,
+      "best_params": {},
+      "cv_average_precision": null,
+      "note": "ensemble of the Random Forest and XGBoost members of the same variant"
+    },
+    "mix_improved": {
+      "label": "Mix (RF + XGB) (improved)",
+      "fit_seconds": 0.0,
+      "best_params": {},
+      "cv_average_precision": null,
+      "note": "ensemble of the Random Forest and XGBoost members of the same variant"
+    }
+  },
+  "feature_importances": {
+    "rf_improved": {
+      "Packet Length Variance": 0.14562366639781635,
+      "Bwd Packet Length Max": 0.1029789687942169,
+      "Max Packet Length": 0.0708668886082546,
+      "Packet Length Mean": 0.05942956442005468,
+      "Fwd IAT Std": 0.048833181131997055,
+      "Total Length of Fwd Packets": 0.03972942617822876,
+      "Flow IAT Max": 0.03775242330042069,
+      "Destination Port": 0.036762123663815496,
+      "Fwd Packet Length Max": 0.03466350805399054,
+      "Total Fwd Packets": 0.02980575197585493,
+      "Flow IAT Std": 0.029374513592475192,
+      "Init_Win_bytes_backward": 0.023803837732028134,
+      "Fwd Packet Length Mean": 0.02365042258526565,
+      "Flow Packets/s": 0.022324810718836487,
+      "PSH Flag Count": 0.022134065586032786,
+      "Fwd IAT Mean": 0.022026806875381756,
+      "Flow IAT Mean": 0.020568072121152907,
+      "Fwd Header Length": 0.020553279891430663,
+      "min_seg_size_forward": 0.019569937456005517,
+      "Bwd Header Length": 0.018219455057431725
+    },
+    "xgb_improved": {
+      "Packet Length Variance": 0.4310133159160614,
+      "Fwd Packet Length Max": 0.1544024646282196,
+      "Total Fwd Packets": 0.13128511607646942,
+      "PSH Flag Count": 0.031117280945181847,
+      "Fwd Header Length": 0.022301239892840385,
+      "Bwd Header Length": 0.02169969119131565,
+      "Destination Port": 0.018642492592334747,
+      "Bwd IAT Mean": 0.018104564398527145,
+      "Fwd Packet Length Mean": 0.016478339210152626,
+      "Packet Length Mean": 0.015934860333800316,
+      "Flow IAT Mean": 0.01374183502048254,
+      "Bwd Packet Length Max": 0.013592681847512722,
+      "Init_Win_bytes_backward": 0.01037807110697031,
+      "Active Std": 0.008508867584168911,
+      "Bwd IAT Std": 0.0083007188513875,
+      "Fwd IAT Min": 0.007533412426710129,
+      "Bwd Packets/s": 0.0068398830480873585,
+      "Min Packet Length": 0.006798505783081055,
+      "Bwd Packet Length Min": 0.006705582607537508,
+      "URG Flag Count": 0.0066441879607737064
+    }
+  },
+  "features_dropped_by_filter": {
+    "rf_improved": [
+      "Average Packet Size",
+      "Avg Bwd Segment Size",
+      "Avg Fwd Segment Size",
+      "Bwd Packet Length Mean",
+      "Bwd Packet Length Std",
+      "CWE Flag Count",
+      "ECE Flag Count",
+      "Fwd IAT Max",
+      "Fwd IAT Total",
+      "Fwd Packet Length Std",
+      "Fwd Packets/s",
+      "Idle Max",
+      "Idle Mean",
+      "Idle Min",
+      "Packet Length Std",
+      "SYN Flag Count",
+      "Subflow Bwd Bytes",
+      "Subflow Bwd Packets",
+      "Subflow Fwd Bytes",
+      "Subflow Fwd Packets",
+      "Total Backward Packets",
+      "Total Length of Bwd Packets"
+    ],
+    "xgb_improved": [
+      "Average Packet Size",
+      "Avg Bwd Segment Size",
+      "Avg Fwd Segment Size",
+      "Bwd Packet Length Mean",
+      "Bwd Packet Length Std",
+      "CWE Flag Count",
+      "ECE Flag Count",
+      "Fwd IAT Max",
+      "Fwd IAT Total",
+      "Fwd Packet Length Std",
+      "Fwd Packets/s",
+      "Idle Max",
+      "Idle Mean",
+      "Idle Min",
+      "Packet Length Std",
+      "SYN Flag Count",
+      "Subflow Bwd Bytes",
+      "Subflow Bwd Packets",
+      "Subflow Fwd Bytes",
+      "Subflow Fwd Packets",
+      "Total Backward Packets",
+      "Total Length of Bwd Packets"
+    ]
+  }
+}
