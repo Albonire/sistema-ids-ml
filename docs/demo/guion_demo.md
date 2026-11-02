@@ -15,8 +15,10 @@ python -m src.train --dataset unsw_nb15       # unos 7 minutos con 4 CPU
 python -m src.train --dataset cicids2017      # entre 15 y 25 minutos con 4 CPU
 python -m src.evaluate --dataset unsw_nb15
 python -m src.evaluate --dataset cicids2017
-pytest -q                                     # 40 pruebas
+python -m pytest -q                                     # 40 pruebas
 ```
+
+Se usa `python -m pytest` y no `pytest` a secas: el shell puede tener en caché un `pytest` de fuera del entorno virtual (por ejemplo en `~/.local/bin`), que no ve `xgboost` y falla al importar. Si se prefiere el comando corto, ejecutar `hash -r` tras activar el entorno.
 
 Los datos y los modelos no están en Git, así que hay que generarlos en cada computador. Las figuras y tablas que se muestran ya vienen en `reports/` (sí están en Git).
 
