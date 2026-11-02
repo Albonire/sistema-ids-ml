@@ -66,3 +66,6 @@ models/*
 *.swo
 .DS_Store
 Thumbs.db
+
+!docs/demo/*.csv
+!reports/**/*.csv
