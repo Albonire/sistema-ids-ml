@@ -125,7 +125,7 @@ python -m src.leakage_ablation --dataset cicids2017
 python -m src.evaluate --dataset unsw_nb15
 python -m src.evaluate --dataset cicids2017
 python -m src.predict --dataset unsw_nb15 --input flujos.csv --operating-point fpr_budget
-pytest -q
+python -m pytest -q
 ```
 
 `python -m src.train --dataset <dataset> --rescore` recalcula umbrales, métricas y modelo elegido a partir de los puntajes guardados, sin reentrenar, si cambian los criterios de decisión.

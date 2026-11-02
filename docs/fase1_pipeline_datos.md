@@ -14,7 +14,7 @@ La fase se escribió primero para CICIDS2017 y se extendió a UNSW-NB15 (dataset
 pip install -r requirements-dev.txt
 python -m src.download_data --dataset all
 python -m src.preprocess --dataset all
-pytest -q
+python -m pytest -q
 ```
 
 ```python
