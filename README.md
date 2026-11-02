@@ -77,7 +77,7 @@ python -m src.preprocess --dataset all               # limpieza a data/processed
 python -m src.train --dataset unsw_nb15              # entrena y elige el mejor modelo
 python -m src.evaluate --dataset unsw_nb15           # figuras y reports/unsw_nb15/resultados.md
 python -m src.predict --dataset unsw_nb15 --input flujos.csv
-pytest -q                                            # pruebas unitarias
+python -m pytest -q                                            # pruebas unitarias
 ```
 
 Reemplazar `unsw_nb15` por `cicids2017` para el segundo dataset. Detalles en [docs/fase1_pipeline_datos.md](docs/fase1_pipeline_datos.md), [docs/fase2_modelos.md](docs/fase2_modelos.md) y [data/README.md](data/README.md).
