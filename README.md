@@ -60,7 +60,9 @@ proyecto/
 |   |-- metrics.py         # Metricas, umbral calibrado e intervalos bootstrap
 |   |-- train.py           # Entrenamiento multimodelo
 |   |-- predict.py         # Inferencia por lotes o flujo individual
-|   `-- evaluate.py        # Figuras, ROC y resultados.md
+|   |-- evaluate.py        # Figuras, ROC y resultados.md
+|   `-- demo.py            # Datos para la demo visual y flujos de ejemplo
+|-- app/demo_app.py        # Demo visual (Streamlit)
 |-- tests/                 # Pruebas unitarias (pytest)
 |-- AGENT.md               # Directivas maestras para agentes y desarrollo
 `-- requirements.txt       # Dependencias de Python
@@ -75,12 +77,14 @@ pip install -r requirements-dev.txt
 python -m src.download_data --dataset all            # descarga y verifica los CSV
 python -m src.preprocess --dataset all               # limpieza a data/processed/
 python -m src.train --dataset unsw_nb15              # entrena y elige el mejor modelo
+python -m src.leakage_ablation --dataset unsw_nb15   # ablacion: efecto de los duplicados
 python -m src.evaluate --dataset unsw_nb15           # figuras y reports/unsw_nb15/resultados.md
 python -m src.predict --dataset unsw_nb15 --input flujos.csv
 python -m pytest -q                                            # pruebas unitarias
+streamlit run app/demo_app.py                        # demo visual en el navegador
 ```
 
-Reemplazar `unsw_nb15` por `cicids2017` para el segundo dataset. Detalles en [docs/fase1_pipeline_datos.md](docs/fase1_pipeline_datos.md), [docs/fase2_modelos.md](docs/fase2_modelos.md) y [data/README.md](data/README.md).
+Reemplazar `unsw_nb15` por `cicids2017` para el segundo dataset. La demo visual se describe en [docs/demo/guion_demo.md](docs/demo/guion_demo.md). Detalles en [docs/fase1_pipeline_datos.md](docs/fase1_pipeline_datos.md), [docs/fase2_modelos.md](docs/fase2_modelos.md) y [data/README.md](data/README.md).
 
 ---
 

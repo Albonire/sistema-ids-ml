@@ -114,7 +114,9 @@ proyecto/
 |   |-- train.py           # Entrenamiento y seleccion del mejor modelo
 |   |-- predict.py         # Inferencia por lotes o flujo individual
 |   |-- evaluate.py        # Figuras y resultados.md
+|   |-- demo.py            # Datos para la demo visual y flujos de ejemplo
 |   `-- utils/             # Hash de archivos y escaladores
+|-- app/demo_app.py        # Demo visual (streamlit run app/demo_app.py)
 |-- tests/                 # Pruebas unitarias (pytest)
 |-- AGENT.md
 |-- README.md
@@ -127,13 +129,15 @@ proyecto/
   - Carga el dataset procesado y lo parte en 70/15/15.
   - Entrena las versiones base y mejorada de RF y XGBoost, y los dos mix.
   - Calibra el umbral de cada modelo en validación (mínimo FPR con Recall >= 0.95).
-  - Elige el mejor modelo con validación y guarda `models/<dataset>/best_model.joblib`, `reports/<dataset>/metrics.csv` y `training_summary.json`.
+  - Elige el mejor modelo con validación y guarda `models/<dataset>/best_model.joblib`, `reports/<dataset>/metrics.csv` (versionado gracias a la excepcion `!reports/**/*.csv` del `.gitignore`) y `training_summary.json`.
 - **`src/predict.py`** (`python -m src.predict --dataset <...> --input flujos.csv` o `--json '{...}'`):
   - Carga el mejor modelo y su umbral.
   - Emite `"Trafico Normal"` o `"Ataque Detectado"` con la probabilidad calculada.
 - **`src/evaluate.py`** (`python -m src.evaluate --dataset <...>`):
   - Matrices de confusión normalizadas, curvas ROC y Precision-Recall, comparativa FPR/Recall, detección por tipo de ataque e importancia de características.
   - Escribe `reports/<dataset>/resultados.md` con intervalos de confianza bootstrap.
+- **`app/demo_app.py`** (`streamlit run app/demo_app.py`):
+  - Demo visual sobre los resultados ya generados: limpieza de datos, clasificación en vivo, umbral interactivo, comparación de modelos y ablación de fuga de datos. La lógica está en `src/demo.py`.
 
 ---
 
