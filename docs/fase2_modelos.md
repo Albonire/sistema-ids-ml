@@ -1,6 +1,6 @@
 # Fase 2: Modelos, evaluación e inferencia
 
-Documento técnico de la fase de entrenamiento (Entregable 2). Resume qué se decidió, qué se midió y qué se puede y no se puede concluir. Las tablas completas están en `reports/<dataset>/resultados.md` y todo se reproduce con los comandos de la sección 8.
+Documento técnico de la fase de entrenamiento (Entregable 2). Resume qué se decidió, qué se midió y qué se puede y no se puede concluir. Las tablas completas están en `reports/<dataset>/resultados.md` y todo se reproduce con los comandos de la sección 9.
 
 ## 1. Alcance y decisiones
 
