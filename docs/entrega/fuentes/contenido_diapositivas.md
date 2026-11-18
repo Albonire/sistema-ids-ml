@@ -62,8 +62,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 # Diapositivas principales {.sin-salto}
 
-## Diapositiva 1: portada y problema
-
+## Diapositiva 1: portada y problema {.nueva-pagina}
 <span class="tiempo">0:45</span> Fabian
 
 **Título:** Los IDS por firmas no ven lo nuevo y se llenan de falsas alarmas
@@ -78,7 +77,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/ids_en_la_red.png`, a la derecha, ocupando la mitad de la diapositiva.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: dónde actúa un IDS de red.](figuras/ids_en_la_red.png)
 :::
 
@@ -86,8 +85,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Alternativa:** si quieren un gancho visual, una captura de una alerta de un SIEM con "3 218 alertas sin revisar" como imagen de fondo muy atenuada (solo si la consiguen con licencia libre).
 
-## Diapositiva 2: pregunta y alcance
-
+## Diapositiva 2: pregunta y alcance {.nueva-pagina}
 <span class="tiempo">0:45</span> Fabian
 
 **Título:** ¿Qué algoritmo equilibra mejor detectar ataques y no dar falsas alarmas?
@@ -104,8 +102,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Qué no poner:** las fórmulas. Se explican en la diapositiva 7 y en el respaldo B1.
 
-## Diapositiva 3: arquitectura
-
+## Diapositiva 3: arquitectura {.nueva-pagina}
 <span class="tiempo">0:45</span> Fabian
 
 **Título:** Una tubería reproducible de seis etapas
@@ -114,14 +111,13 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/arquitectura.png`, a todo el ancho.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa de la arquitectura.](figuras/arquitectura.png)
 :::
 
 **Diseño:** la figura es la diapositiva. Si quieren dar ritmo, hagan que cada caja aparezca con un clic (de izquierda a derecha) mientras Fabian las nombra.
 
-## Diapositiva 4: los datos
-
+## Diapositiva 4: los datos {.nueva-pagina}
 <span class="tiempo">0:50</span> Silvana
 
 **Título:** Dos datasets públicos, muy desbalanceados y con muchas filas repetidas
@@ -133,7 +129,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/desbalance_familias.png` debajo de las tarjetas.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: flujos por familia.](figuras/desbalance_familias.png)
 :::
 
@@ -141,8 +137,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Si les falta espacio:** quiten la barra de CICIDS2017 y dejen solo UNSW-NB15.
 
-## Diapositiva 5: limpieza sin fuga y partición
-
+## Diapositiva 5: limpieza sin fuga y partición {.nueva-pagina}
 <span class="tiempo">0:55</span> Silvana
 
 **Título:** Quitar duplicados antes de partir evita medir lo que el modelo solo recuerda
@@ -155,7 +150,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/fuga_de_datos.png` (panel izquierdo y central son los importantes).
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: efecto de los duplicados.](figuras/fuga_de_datos.png)
 :::
 
@@ -163,8 +158,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Alternativa:** si prefieren mostrar el proceso de limpieza, usen `figuras/embudo_limpieza.png` en lugar de la figura de fuga y pasen la de fuga al respaldo.
 
-## Diapositiva 6: los modelos
-
+## Diapositiva 6: los modelos {.nueva-pagina}
 <span class="tiempo">0:45</span> Silvana
 
 **Título:** Tres modelos, cada uno en versión base y mejorada
@@ -177,7 +171,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/base_vs_mejorada.png` en la parte inferior.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: base y mejorada.](figuras/base_vs_mejorada.png)
 :::
 
@@ -185,8 +179,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Diseño:** iconos arriba, diagrama de versiones abajo. Nada de fórmulas ni de nombres de hiperparámetros.
 
-## Diapositiva 7: métricas y puntos de operación
-
+## Diapositiva 7: métricas y puntos de operación {.nueva-pagina}
 <span class="tiempo">0:50</span> Raul
 
 **Título:** El umbral es una decisión de negocio: usamos tres puntos de operación
@@ -201,7 +194,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/matrices_confusion_unsw.png`.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: un modelo, tres umbrales.](figuras/matrices_confusion_unsw.png)
 :::
 
@@ -209,8 +202,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Idea para el expositor:** "bajar el umbral = más detección, más falsas alarmas".
 
-## Diapositiva 8: resultados en UNSW-NB15
-
+## Diapositiva 8: resultados en UNSW-NB15 {.nueva-pagina}
 <span class="tiempo">0:55</span> Raul
 
 **Título:** En UNSW-NB15 ningún modelo cumple la meta: normales y ataques se solapan
@@ -224,7 +216,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/distribucion_puntajes_unsw.png`.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: distribución de puntajes.](figuras/distribucion_puntajes_unsw.png)
 :::
 
@@ -232,8 +224,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Pie:** Modelo: {{unsw.best}} · Conjunto de prueba · Fuente: reports/unsw_nb15.
 
-## Diapositiva 9: resultados en CICIDS2017
-
+## Diapositiva 9: resultados en CICIDS2017 {.nueva-pagina}
 <span class="tiempo">0:40</span> Raul
 
 **Título:** CICIDS2017 está saturado y el criterio literal resulta degenerado
@@ -245,14 +236,13 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** `figuras/roc_puntos_operacion.png`, mostrando el panel derecho (CICIDS2017).
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: curva ROC con los tres puntos.](figuras/roc_puntos_operacion.png)
 :::
 
 **Diseño:** las dos cifras a la izquierda, con una flecha roja hacia arriba entre ellas; la curva a la derecha. Texto pequeño: "Por eso reportamos tres puntos de operación".
 
-## Diapositiva 10: experimentos formales
-
+## Diapositiva 10: experimentos formales {.nueva-pagina}
 <span class="tiempo">0:55</span> Raul
 
 **Título:** XGBoost mejorado gana de forma consistente; la partición pesa más que el modelo
@@ -265,14 +255,13 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** a la derecha, `reports/unsw_nb15/figures/pairwise.png` (diferencias pareadas) recortada.
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: pruebas pareadas.](../../reports/unsw_nb15/figures/pairwise.png)
 :::
 
 **Diseño:** tres tarjetas en columna, la figura a la derecha. Las tarjetas con un número de 48 pt y una línea de texto.
 
-## Diapositiva 11: demostración
-
+## Diapositiva 11: demostración {.nueva-pagina}
 <span class="tiempo">0:50</span> Fabian
 
 **Título:** Un flujo real, el mismo modelo y dos umbrales
@@ -281,7 +270,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** a la izquierda, `figuras/flujo_a_variables.png`; a la derecha, la terminal en vivo (o la captura de la salida guardada).
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: un flujo real y la decisión del modelo.](figuras/flujo_a_variables.png)
 :::
 
@@ -289,8 +278,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Captura de respaldo:** tomen una captura de pantalla de la salida de `--operating-point recall_target` y pónganla como imagen en esta diapositiva, para no depender del computador.
 
-## Diapositiva 12: conclusiones
-
+## Diapositiva 12: conclusiones {.nueva-pagina}
 <span class="tiempo">0:50</span> Raul
 
 **Título:** Cuatro conclusiones y por dónde seguir
@@ -306,7 +294,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 **Imagen:** opcional, `figuras/alarmas_por_millon.png` pequeña, a la derecha, como "por qué importa".
 
-::: {.figura-pequena}
+::: {.figura-mediana}
 ![Vista previa: aritmética de las falsas alarmas.](figuras/alarmas_por_millon.png)
 :::
 
@@ -316,8 +304,7 @@ Todas están en `docs/entrega/figuras/` y salen de datos reales (se regeneran co
 
 Solo se muestran si preguntan. Ténganlas al final, detrás de una diapositiva gris que diga "Respaldo".
 
-## Respaldo B1: de la matriz de confusión a cada métrica
-
+## Respaldo B1: de la matriz de confusión a cada métrica {.nueva-pagina}
 **Para qué:** si preguntan qué es Recall, FPR o precisión.
 
 **Contenido:** la matriz de confusión de `figuras/matrices_confusion_unsw.png` (la del umbral 0.5) con las cuatro celdas rotuladas VP, FP, VN y FN, y al lado las fórmulas:
@@ -326,8 +313,7 @@ $$\mathrm{Recall}=\frac{VP}{VP+FN}\qquad \mathrm{FPR}=\frac{FP}{FP+VN}\qquad \ma
 
 **Ejemplo con números** (UNSW-NB15, umbral 0.5, prueba): VP = {{unsw.m.xgb_improved.default.tp}}, FN = {{unsw.m.xgb_improved.default.fn}}, FP = {{unsw.m.xgb_improved.default.fp}}, VN = {{unsw.m.xgb_improved.default.tn}}; por tanto Recall = {{unsw.m.xgb_improved.default.recall}} y FPR = {{unsw.m.xgb_improved.default.fpr}}.
 
-## Respaldo B2: semillas y pruebas pareadas
-
+## Respaldo B2: semillas y pruebas pareadas {.nueva-pagina}
 **Para qué:** si preguntan cómo se sabe que la mejora es real, o por qué una sola semilla no basta.
 
 **Contenido:** la tabla de diferencias por semilla (mejorada menos base), recortada a las filas de XGBoost:
@@ -336,8 +322,7 @@ $$\mathrm{Recall}=\frac{VP}{VP+FN}\qquad \mathrm{FPR}=\frac{FP}{FP+VN}\qquad \ma
 
 **Frase clave:** "Comparar dos intervalos sueltos puede ocultar una diferencia real; la prueba pareada y las semillas no."
 
-## Respaldo B3: particiones oficiales y el 0.97 de Alkhater
-
+## Respaldo B3: particiones oficiales y el 0.97 de Alkhater {.nueva-pagina}
 **Para qué:** si preguntan por qué no obtuvieron el 0.97 de la literatura.
 
 **Contenido:** la tabla de particiones oficiales:
@@ -346,8 +331,7 @@ $$\mathrm{Recall}=\frac{VP}{VP+FN}\qquad \mathrm{FPR}=\frac{FP}{FP+VN}\qquad \ma
 
 **Frase clave:** "Los duplicados explican una parte de la distancia, pero no toda. No conocemos el preprocesamiento de ese estudio: solo verificamos su resumen."
 
-## Respaldo B4: limitaciones y correcciones al Entregable 1
-
+## Respaldo B4: limitaciones y correcciones al Entregable 1 {.nueva-pagina}
 **Para qué:** si preguntan por los límites del trabajo, o por qué los números no coinciden con el primer entregable.
 
 **Limitaciones (viñetas):**

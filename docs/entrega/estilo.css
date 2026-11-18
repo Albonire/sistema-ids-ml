@@ -75,3 +75,10 @@ nav#TOC .pg { float: right; color: var(--muted); font-variant-numeric: tabular-n
 .relevo { margin: 0 0 5mm; padding: 1.6mm 3.5mm; border-left: 4px solid var(--orange); background: #fdf3ee; font-size: 9pt; }
 .relevo p { margin: 0; }
 .tiempo { display: inline-block; background: var(--ink); color: #fff; font-size: 8pt; font-weight: 600; padding: 0.4mm 2.2mm; border-radius: 1mm; margin-right: 2mm; }
+
+/* keep a script block together with its heading and time badge */
+.decir, .relevo { break-inside: avoid; }
+p:has(> .tiempo) { break-after: avoid; margin-bottom: 1.5mm; }
+
+/* one slide (or backup slide) per page in the slide content document */
+h2.nueva-pagina { page-break-before: always; margin-top: 0; padding-bottom: 2mm; border-bottom: 1.5px solid var(--line); }

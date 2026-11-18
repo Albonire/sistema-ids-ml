@@ -283,6 +283,26 @@ Con la regla de `AGENT.md`, {{unsw.best}} gana en {{unsw.s.wins.recall_target.xg
 - **XGBoost**: la mejorada gana en {{unsw.sd.xgb.recall_target.fpr.better}} de {{unsw.sd.n}} semillas con la regla de `AGENT.md` (FPR menor en promedio {{unsw.sd.xgb.recall_target.fpr.mean}}) y en {{unsw.sd.xgb.fpr_budget.recall.better}} de {{unsw.sd.n}} con el presupuesto (Recall mayor en promedio {{unsw.sd.xgb.fpr_budget.recall.mean}}). La mejora es **pequeña pero consistente**.
 - **Random Forest** y **Mix**: la mejora no es consistente; con umbral 0.5 el Random Forest mejorado incluso pierde Recall ({{unsw.sd.rf.default.recall.mean}} en promedio).
 
+**CICIDS2017.** Las mismas cinco semillas, con el dataset saturado:
+
+**CICIDS2017, mínimo FPR con Recall >= 0.95**
+
+{{>tabla_semillas cic recall_target}}
+
+**CICIDS2017, máximo Recall con FPR <= 0.02**
+
+{{>tabla_semillas cic fpr_budget}}
+
+Con la regla de `AGENT.md`, un XGBoost gana en las {{cic.s.n}} semillas (el base en {{cic.s.wins.recall_target.xgb_baseline}} y el mejorado en {{cic.s.wins.recall_target.xgb_improved}}); con el presupuesto de falsas alarmas el ganador cambia de semilla en semilla (XGBoost mejorado {{cic.s.wins.fpr_budget.xgb_improved}}, Mix base {{cic.s.wins.fpr_budget.mix_baseline}}, XGBoost base {{cic.s.wins.fpr_budget.xgb_baseline}}). Las diferencias entre las versiones base y mejorada de XGBoost son del orden de la desviación entre semillas, así que **en CICIDS2017 no se puede nombrar un ganador estable** entre ellas.
+
+{{>tabla_diferencias_semillas cic}}
+
+La columna final cuenta, por punto de operación, las semillas en que la versión mejorada mejora la métrica que define el punto: menor FPR con la regla de `AGENT.md`, mayor Recall con el presupuesto, y ambas a la vez con umbral 0.5.
+
+- **XGBoost**: la versión mejorada no aporta una mejora consistente. Con la regla de `AGENT.md` tiene un FPR menor en solo {{cic.sd.xgb.recall_target.fpr.better}} de {{cic.sd.n}} semillas; con el presupuesto, el Recall es mayor en {{cic.sd.xgb.fpr_budget.recall.better}} de {{cic.sd.n}}, pero la diferencia es despreciable porque el Recall ya está en el techo, y la diferencia de FPR ({{cic.sd.xgb.fpr_budget.fpr.mean}} en promedio) tiene una desviación comparable a la media.
+- **Random Forest**: con umbral 0.5 la versión mejorada pierde Recall en las {{cic.sd.n}} semillas ({{cic.sd.rf.default.recall.mean}} en promedio) a cambio de menos falsas alarmas ({{cic.sd.rf.default.fpr.mean}}), y con la regla de `AGENT.md` pierde {{cic.sd.rf.recall_target.recall.mean}} de Recall. Es coherente con una búsqueda hecha con 60 000 flujos que eligió árboles menos profundos que los de la versión base (sin límite de profundidad).
+- **Mix**: con umbral 0.5 la mejorada cambia Recall por falsas alarmas ({{cic.sd.mix.default.recall.mean}} y {{cic.sd.mix.default.fpr.mean}} en promedio) y no mejora ambas a la vez en ninguna semilla.
+
 ## Pruebas pareadas
 
 Comparan dos modelos sobre las mismas filas de prueba (semilla 42), cada uno con su propio umbral, con IC de 95 % y p bilateral. Solo miden el ruido de muestreo de la prueba.
@@ -339,7 +359,6 @@ Se entrena el mismo XGBoost base con tres protocolos de limpieza y se mide qué 
 
 En UNSW-NB15 el protocolo ingenuo deja {{unsw.l.naive.leaked_test_share_pct}} de la prueba ya vista en entrenamiento y sobrestima el Recall: {{unsw.l.naive.recall}} frente a {{unsw.l.full.recall}} con el protocolo completo. En CICIDS2017 el efecto es despreciable porque el dataset ya está saturado.
 
-[[CIC_SEEDS]]
 
 # Análisis crítico
 
