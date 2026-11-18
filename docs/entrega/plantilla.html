@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>$pagetitle$</title>
+<meta name="author" content="$for(author-meta)$$author-meta$$sep$, $endfor$">
+<style>
+$highlighting-css$
+</style>
+$for(css)$<link rel="stylesheet" href="$css$">
+$endfor$
+</head>
+<body>
+<section class="portada">
+  <div class="institucion">Universidad de Pamplona · Programa de Ingeniería de Sistemas · Seguridad Informática</div>
+  <div class="tipo">$tipo$</div>
+  <div class="titulo">$titulo$</div>
+  <div class="subtitulo">$subtitulo$</div>
+  <div class="datos">
+    <div><b>Integrantes</b> Silvana, Fabian, Raul</div>
+    <div><b>Docente</b> Luz Marina Santos Jaimes</div>
+    <div><b>Fecha</b> $fecha$</div>
+    <div><b>Repositorio</b> github.com/Albonire/sistema-ids-ml</div>
+  </div>
+</section>
+$if(table-of-contents)$
+<nav id="TOC" role="doc-toc">
+$table-of-contents$
+</nav>
+$endif$
+$body$
+</body>
+</html>

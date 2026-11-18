@@ -69,6 +69,7 @@ def evaluate_protocol(df: pd.DataFrame) -> dict[str, Any]:
 
 
 def run(dataset_key: str) -> dict[str, dict[str, Any]]:
+    """Evaluate the three protocols on a dataset and save the JSON result."""
     dataset = config.get_dataset(dataset_key)
     raw = load_raw_unsw(dataset.raw_dir) if dataset is config.UNSW_NB15 else load_raw(dataset.raw_dir)
     results: dict[str, dict[str, Any]] = {}
@@ -83,6 +84,7 @@ def run(dataset_key: str) -> dict[str, dict[str, Any]]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Duplicate leakage ablation.")
     parser.add_argument("--dataset", choices=list(config.DATASETS), required=True)
     args = parser.parse_args(argv)

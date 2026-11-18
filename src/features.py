@@ -23,9 +23,9 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         self.threshold = threshold
 
     def fit(self, X: pd.DataFrame | np.ndarray, y: object = None) -> CorrelationFilter:
+        """Select the columns to keep from the training data."""
         frame = pd.DataFrame(X)
-        corr = frame.corr().abs().to_numpy()
-        corr = np.nan_to_num(corr, nan=0.0)
+        corr = np.nan_to_num(frame.corr().abs().to_numpy(), nan=0.0)
         keep: list[int] = []
         for column in range(corr.shape[0]):
             if all(corr[column, kept] <= self.threshold for kept in keep):
@@ -36,10 +36,12 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame | np.ndarray) -> np.ndarray:
+        """Keep only the selected columns."""
         values = X.to_numpy() if isinstance(X, pd.DataFrame) else np.asarray(X)
         return values[:, self.keep_indices_]
 
     def get_feature_names_out(self, input_features: list[str] | None = None) -> np.ndarray:
+        """Names of the kept columns."""
         if input_features is None:
             input_features = [f"x{i}" for i in range(self.n_features_in_)]
         return np.asarray(input_features, dtype=object)[self.keep_indices_]

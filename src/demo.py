@@ -61,6 +61,7 @@ class DemoContext:
 
     @property
     def best_model(self) -> str:
+        """Name of the model chosen on validation."""
         return str(self.summary["best_model"])
 
 
@@ -76,6 +77,7 @@ def required_artifacts(dataset_key: str) -> dict[str, Path]:
 
 
 def missing_artifacts(dataset_key: str) -> list[Path]:
+    """Required artifacts of a dataset that are not on disk yet."""
     return [path for path in required_artifacts(dataset_key).values() if not path.is_file()]
 
 
@@ -181,7 +183,7 @@ def judge(predictions: pd.DataFrame, flows: pd.DataFrame) -> pd.DataFrame:
     else:
         result["real"] = np.where(real == 1, "Ataque", config.BENIGN_LABEL)
     result["outcome"] = [
-        OUTCOME_LABELS[(int(r), int(p))] for r, p in zip(real, result["prediction"])
+        OUTCOME_LABELS[(int(r), int(p))] for r, p in zip(real, result["prediction"], strict=False)
     ]
     result["correct"] = real.to_numpy() == result["prediction"].to_numpy()
     return result
@@ -254,6 +256,7 @@ def write_examples(dataset_key: str, path: Path | None = None) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Helpers for the visual demo.")
     parser.add_argument("--dataset", choices=list(config.DATASETS), required=True)
     parser.add_argument(
