@@ -1,0 +1,12 @@
+Model xgb_improved, recall_target threshold 0.3383: {'Trafico Normal': 5, 'Ataque Detectado': 5}
+   prediction    classification  attack_probability
+0           0    Trafico Normal            0.000020
+1           0    Trafico Normal            0.000003
+2           0    Trafico Normal            0.000042
+3           0    Trafico Normal            0.000009
+4           1  Ataque Detectado            0.998622
+5           1  Ataque Detectado            0.999942
+6           1  Ataque Detectado            0.958346
+7           1  Ataque Detectado            0.895428
+8           1  Ataque Detectado            0.440568
+9           0    Trafico Normal            0.126930

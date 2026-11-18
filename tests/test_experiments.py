@@ -144,3 +144,18 @@ def test_run_seeds_resumes_from_the_partial_file(
     assert calls == [2]  # seed 1 came from the partial file, seed 42 from metrics.csv
     assert set(rows["seed"]) == {config.RANDOM_STATE, 1, 2}
     assert not (dataset.reports_dir / "multiseed.partial.csv").exists()
+
+
+def test_seed_differences_count_seeds_where_the_improved_version_wins() -> None:
+    def rows(seed: int, base_fpr: float, improved_fpr: float) -> list[dict]:
+        out = []
+        for model, fpr in (("rf_baseline", base_fpr), ("rf_improved", improved_fpr)):
+            for point in ("default", "recall_target", "fpr_budget"):
+                out.append({"model": model, "operating_point": point, "split": "test", "seed": seed,
+                            "recall": 0.9, "fpr": fpr})
+        return out
+
+    table = experiments.seed_differences(pd.DataFrame(rows(1, 0.10, 0.08) + rows(2, 0.10, 0.12)))
+    rf = table[(table.algorithm == "rf") & (table.operating_point == "recall_target") & (table.metric == "fpr")]
+    assert rf["seeds_better"].iloc[0] == 1 and rf["n_seeds"].iloc[0] == 2
+    assert rf["mean_difference"].iloc[0] == pytest.approx(0.0)

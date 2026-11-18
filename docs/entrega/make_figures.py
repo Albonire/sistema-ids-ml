@@ -310,8 +310,102 @@ def toy_tree() -> None:
     _save(fig, "ejemplo_arbol.png")
 
 
+# ------------------------------------------------------------------ slide diagrams
+
+
+def ids_in_network() -> None:
+    """Where a network IDS sits and what it does (schematic, no data)."""
+    fig, ax = plt.subplots(figsize=(13, 5.0))
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 5.0)
+    ax.axis("off")
+    _box(ax, 0.2, 1.6, 1.8, 1.3, "Internet\n(tráfico externo)", MUTED, "white", 10)
+    _box(ax, 2.6, 1.6, 1.8, 1.3, "Cortafuegos", INK, "white", 10)
+    _box(ax, 5.0, 1.6, 1.8, 1.3, "Conmutador\n(copia del tráfico)", BLUE, "white", 10)
+    _box(ax, 7.6, 1.6, 2.0, 1.3, "Red interna\nservidores y equipos", AQUA, "white", 10)
+    _box(ax, 5.0, 3.5, 1.8, 0.9, "IDS con\naprendizaje", ORANGE, "white", 10)
+    _box(ax, 10.2, 3.5, 2.6, 0.9, "Alerta al analista\n(SOC / SIEM)", CRITICAL, "white", 10)
+    for x1, x2 in ((2.02, 2.58), (4.42, 4.98), (6.82, 7.58)):
+        _arrow(ax, x1, 2.25, x2, 2.25)
+    _arrow(ax, 5.9, 2.95, 5.9, 3.45)
+    _arrow(ax, 6.82, 3.95, 10.18, 3.95)
+    ax.text(5.9, 0.9, "El IDS no bloquea: observa una copia del tráfico, lo resume en flujos y decide\nsi cada flujo parece normal o un ataque. Si se equivoca hacia un lado, pasa un ataque; hacia el otro, sobran alertas.", ha="center", va="top", fontsize=9.5, color=INK)
+    ax.text(6.5, 4.85, "Dónde actúa un IDS de red", ha="center", fontsize=13, fontweight="bold")
+    _save(fig, "ids_en_la_red.png")
+
+
+def flow_to_features() -> None:
+    """One real UNSW-NB15 test flow, its features and the decision at each threshold."""
+    from src.predict import classify, load_bundle
+
+    flow = _json(ROOT / "docs" / "demo" / "flujo_ejemplo.json")
+    bundle = load_bundle("unsw_nb15")
+    result = classify(pd.DataFrame([flow]), bundle, "recall_target").iloc[0]
+    shown = ["proto", "service", "state", "dur", "spkts", "dpkts", "sbytes", "dbytes", "sttl", "ct_state_ttl"]
+    fig, ax = plt.subplots(figsize=(13, 4.8))
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 4.8)
+    ax.axis("off")
+    ax.text(0.2, 4.45, "Un flujo de red (resumen de una conversación)", fontsize=12, fontweight="bold")
+    for i, name in enumerate(shown):
+        row, col = divmod(i, 5)
+        x, y = 0.2 + col * 2.05, 3.0 - row * 1.25
+        value = flow[name]
+        text = f"{value:,.0f}".replace(",", " ") if isinstance(value, (int, float)) and abs(value) >= 1000 else (f"{value:.4g}" if isinstance(value, float) else str(value))
+        ax.add_patch(FancyBboxPatch((x, y), 1.9, 0.95, boxstyle="round,pad=0.02,rounding_size=0.06", fc="#eef4fd", ec=BLUE, lw=1.2))
+        ax.text(x + 0.95, y + 0.64, name, ha="center", va="center", fontsize=9, color=MUTED, family="JetBrains Mono")
+        ax.text(x + 0.95, y + 0.3, text, ha="center", va="center", fontsize=12, fontweight="bold")
+    ax.text(0.2, 0.55, f"... y {len(bundle['feature_columns']) - len(shown)} variables más", fontsize=9.5, color=MUTED)
+    _arrow(ax, 10.5, 2.4, 11.0, 2.4)
+    _box(ax, 11.05, 1.4, 1.8, 2.0, f"Modelo\n{bundle['model_name']}\n\nprobabilidad\nde ataque\n{result['attack_probability']:.4f}", ORANGE, "white", 9)
+    ax.text(11.95, 0.95, result["classification"], ha="center", fontsize=11, fontweight="bold", color=CRITICAL)
+    ax.text(6.5, 0.2, "Ejemplo real: primer flujo de docs/demo/flujo_ejemplo.json, tomado del conjunto de prueba.", ha="center", fontsize=8.5, color=MUTED)
+    _save(fig, "flujo_a_variables.png")
+
+
+def base_vs_improved() -> None:
+    """The two pipelines side by side, and what each step uses (schematic)."""
+    fig, ax = plt.subplots(figsize=(13, 5.2))
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 5.2)
+    ax.axis("off")
+    ax.text(6.5, 4.95, "Versión base y versión mejorada de cada modelo", ha="center", fontsize=13, fontweight="bold")
+    rows = [
+        (3.55, "BASE", MUTED, ["Datos de entrenamiento", "Codificar categorías", "Modelo con valores\ndel Entregable 1", "Umbral 0.5\n(los otros dos puntos se\nevalúan también)"]),
+        (1.35, "MEJORADA", BLUE, ["Datos de entrenamiento", "Codificar categorías\n+ filtro de correlación", "Hiperparámetros por\nvalidación cruzada (5 folds)", "Umbral elegido\nen validación"]),
+    ]
+    for y, name, color, steps in rows:
+        ax.text(0.15, y + 0.5, name, fontsize=11, fontweight="bold", color=color, rotation=90, va="center")
+        for i, step in enumerate(steps):
+            x = 0.7 + i * 3.1
+            _box(ax, x, y, 2.6, 1.0, step, color, "white", 9)
+            if i < len(steps) - 1:
+                _arrow(ax, x + 2.62, y + 0.5, x + 3.08, y + 0.5)
+    ax.text(6.5, 0.55, "Los tres puntos de operación se evalúan para las dos versiones. En ambas, el conjunto de prueba no interviene en ninguna decisión.", ha="center", fontsize=10, color=INK)
+    _save(fig, "base_vs_mejorada.png")
+
+
+def class_balance() -> None:
+    """Flows per traffic type after cleaning, log scale, both datasets."""
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.4))
+    for ax, key in zip(axes, ("unsw_nb15", "cicids2017"), strict=True):
+        report = _json(config.get_dataset(key).cleaning_report_file)
+        counts = pd.Series(report["attack_type_counts_final"]).sort_values()
+        colors = [BLUE if name == config.BENIGN_LABEL else CRITICAL for name in counts.index]
+        ax.barh(counts.index, counts.values, color=colors)
+        for i, value in enumerate(counts.values):
+            ax.text(value, i, f" {_fmt(value)}", va="center", fontsize=8)
+        ax.set_xscale("log")
+        ax.set_xlim(1, counts.max() * 8)
+        ax.set_xlabel("Flujos limpios (escala logarítmica)")
+        ax.set_title(config.get_dataset(key).display_name)
+        ax.tick_params(axis="y", labelsize=8)
+    fig.suptitle("Los datos están muy desbalanceados: azul, tráfico normal; rojo, familias de ataque", fontweight="bold")
+    _save(fig, "desbalance_familias.png")
+
+
 def main() -> int:
-    for step in (architecture, cleaning_funnel, leakage, score_distribution, roc_points, confusion_examples, alarms_per_day, toy_tree):
+    for step in (architecture, cleaning_funnel, leakage, score_distribution, roc_points, confusion_examples, alarms_per_day, toy_tree, ids_in_network, flow_to_features, base_vs_improved, class_balance):
         step()
     return 0
 

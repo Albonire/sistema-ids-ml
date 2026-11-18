@@ -40,7 +40,7 @@ PAIR_TEXT = {
     ("mix_baseline", "xgb_baseline"): "Mix base frente a XGBoost base",
 }
 PROTOCOL_TEXT = {
-    "A_oficial_ingenuo": "A. Particiones oficiales, sin depurar (como la literatura)",
+    "A_oficial_ingenuo": "A. Particiones oficiales, sin depurar (uso directo de los archivos)",
     "B_oficial_depurado": "B. Particiones oficiales, depuradas y sin vectores repetidos entre ellas",
     "C_cv5_ingenuo": "C1. Validación cruzada de 5 folds sobre el entrenamiento oficial, sin depurar",
     "C_cv5_depurado": "C2. Validación cruzada de 5 folds sobre el entrenamiento oficial, depurado",
@@ -50,6 +50,11 @@ SHORT_POINT = {
     "recall_target": f"Recall >= {config.RECALL_TARGET}",
     "fpr_budget": f"FPR <= {config.FPR_TARGET}",
 }
+
+
+def _thousands(value: float) -> str:
+    """Integer with a space as thousands separator, for numbers only."""
+    return f"{int(value):,}".replace(",", " ")
 
 
 def _pmr(row: Any, metric: str, digits: int = 4) -> str:
@@ -215,6 +220,32 @@ def seeds_section(dataset: config.DatasetSource) -> list[str]:
             f"métricas guardadas (diferencia absoluta máxima {reproduction['max_abs_difference']:.2e}).",
             "",
         ]
+    differences_path = dataset.reports_dir / "multiseed_differences.csv"
+    if differences_path.is_file():
+        diff = pd.read_csv(differences_path)
+        names = {"rf": "Random Forest", "xgb": "XGBoost", "mix": "Mix RF + XGB"}
+        lines += [
+            "### Versión mejorada menos versión base, semilla por semilla",
+            "",
+            "Diferencia media ± desviación estándar de las diferencias emparejadas por semilla. La última columna "
+            "cuenta las semillas en que la mejorada gana en la métrica que define el punto (menor FPR con Recall "
+            ">= 0.95, mayor Recall con FPR <= 0.02, y ambas a la vez con umbral 0.5).",
+            "",
+            "| Algoritmo | Punto de operación | Diferencia de Recall | Diferencia de FPR | Semillas en que gana |",
+            "|---|---|---|---|---|",
+        ]
+        for algorithm in ("rf", "xgb", "mix"):
+            for point in OPERATING_POINTS:
+                sub = diff[(diff["algorithm"] == algorithm) & (diff["operating_point"] == point)].set_index("metric")
+                recall: Any = sub.loc["recall"]
+                fpr: Any = sub.loc["fpr"]
+                lines.append(
+                    f"| {names[algorithm]} | {SHORT_POINT[point]} | "
+                    f"{recall.mean_difference:+.4f} ± {recall.std_difference:.4f} | "
+                    f"{fpr.mean_difference:+.5f} ± {fpr.std_difference:.5f} | "
+                    f"{int(recall.seeds_better)} de {int(recall.n_seeds)} |"
+                )
+        lines.append("")
     lines += ["![Media y desviación sobre semillas](figures/multiseed.png)", ""]
     return lines
 
@@ -249,7 +280,7 @@ def pairwise_section(dataset: config.DatasetSource) -> list[str]:
             ].set_index("metric")
             lines.append(
                 f"| {text} | {SHORT_POINT[point]} | {cell(subset.loc['recall'], 4)} | "
-                f"{cell(subset.loc['fpr'], 4)} |"
+                f"{cell(subset.loc['fpr'], 5)} |"
             )
     lines += ["", "![Diferencias pareadas](figures/pairwise.png)", ""]
     return lines
@@ -284,9 +315,9 @@ def official_section(dataset: config.DatasetSource) -> list[str]:
                 cell = {m: f"{rows[m].iloc[0]:.4f}" for m in ("accuracy", "recall", "fpr", "roc_auc")}
                 size_train, size_test = int(rows["n_train"].iloc[0]), int(rows["n_test"].iloc[0])
             lines.append(
-                f"| {text} | {pretty(model)} | {size_train:,} | {size_test:,} | "
+                f"| {text} | {pretty(model)} | {_thousands(size_train)} | {_thousands(size_test)} | "
                 f"{100 * rows['leaked_test_share'].mean():.1f} % | {cell['accuracy']} | {cell['recall']} | "
-                f"{cell['fpr']} | {cell['roc_auc']} |".replace(",", ".")
+                f"{cell['fpr']} | {cell['roc_auc']} |"
             )
     lines += [
         "",

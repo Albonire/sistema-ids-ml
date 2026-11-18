@@ -30,7 +30,7 @@ Tres **puntos de operación**, con el umbral siempre elegido en validación:
 
 | Punto | Regla | Para qué sirve |
 |---|---|---|
-| Umbral 0.5 | Fijo | Es lo que reporta casi toda la literatura. |
+| Umbral 0.5 | Fijo | Es el valor por defecto de los clasificadores y el de la configuración del Entregable 1. |
 | Mínimo FPR con Recall >= 0.95 | Criterio literal de `AGENT.md` | Selección oficial del modelo. |
 | Máximo Recall con FPR <= 0.02 | Presupuesto de falsas alarmas | Complementa el criterio: modela un SOC con capacidad limitada de revisar alertas. |
 

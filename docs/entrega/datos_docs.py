@@ -145,12 +145,23 @@ def collect() -> dict[str, str]:
             if repro:
                 N[f"{short}.s.repro"] = f"{repro['max_abs_difference']:.1e}"
 
+        diff_path = ds.reports_dir / "multiseed_differences.csv"
+        if diff_path.is_file():
+            for _, row in pd.read_csv(diff_path).iterrows():
+                base = f"{short}.sd.{row['algorithm']}.{row['operating_point']}.{row['metric']}"
+                digits = 5 if row["metric"] == "fpr" else 4
+                N[f"{base}.mean"] = f"{row['mean_difference']:+.{digits}f}"
+                N[f"{base}.std"] = f"{row['std_difference']:.{digits}f}"
+                N[f"{base}.better"] = str(int(row["seeds_better"]))
+                N[f"{short}.sd.n"] = str(int(row["n_seeds"]))
+
         pair_path = ds.reports_dir / "pairwise_tests.csv"
         if pair_path.is_file():
             for _, row in pd.read_csv(pair_path).iterrows():
                 base = f"{short}.p.{row['model_a']}__{row['model_b']}.{row['operating_point']}.{row['metric']}"
-                N[f"{base}.diff"] = f"{row['difference']:+.4f}"
-                N[f"{base}.low"], N[f"{base}.high"] = f"{row['low']:+.4f}", f"{row['high']:+.4f}"
+                digits = 5 if row["metric"] == "fpr" else 4
+                N[f"{base}.diff"] = f"{row['difference']:+.{digits}f}"
+                N[f"{base}.low"], N[f"{base}.high"] = f"{row['low']:+.{digits}f}", f"{row['high']:+.{digits}f}"
                 N[f"{base}.p"] = f"{row['p_value']:.3f}"
 
         abl_path = ds.reports_dir / "feature_ablation.csv"
@@ -220,6 +231,22 @@ def tabla_semillas(short: str, point: str) -> str:
     return _md(["Modelo", "Recall", "FPR", "Precisión", "Accuracy", "ROC-AUC"], rows)
 
 
+def tabla_diferencias_semillas(short: str) -> str:
+    table = pd.read_csv(_ds(short).reports_dir / "multiseed_differences.csv")
+    names = {"rf": "Random Forest", "xgb": "XGBoost", "mix": "Mix RF + XGB"}
+    rows = []
+    for algorithm in ("rf", "xgb", "mix"):
+        for point in OPERATING_POINTS:
+            sub = table[(table.algorithm == algorithm) & (table.operating_point == point)].set_index("metric")
+            rows.append(
+                [names[algorithm], POINT_TEXT[point],
+                 f"{sub.loc['recall', 'mean_difference']:+.4f} ± {sub.loc['recall', 'std_difference']:.4f}",
+                 f"{sub.loc['fpr', 'mean_difference']:+.5f} ± {sub.loc['fpr', 'std_difference']:.5f}",
+                 f"{int(sub.loc['recall', 'seeds_better'])} de {int(sub.loc['recall', 'n_seeds'])}"]
+            )
+    return _md(["Algoritmo", "Punto de operación", "Diferencia de Recall", "Diferencia de FPR", "Semillas en que gana la mejorada"], rows)
+
+
 def tabla_pareadas(short: str) -> str:
     table = pd.read_csv(_ds(short).reports_dir / "pairwise_tests.csv")
     rows = []
@@ -227,9 +254,11 @@ def tabla_pareadas(short: str) -> str:
         for point in ("recall_target", "fpr_budget"):
             sub = table[(table.model_a == a) & (table.model_b == b) & (table.operating_point == point)].set_index("metric")
             cells = []
-            for metric in ("recall", "fpr"):
+            for metric, digits in (("recall", 4), ("fpr", 5)):
                 r = sub.loc[metric]
-                cells.append(f"{r.difference:+.4f} [{r.low:+.4f}, {r.high:+.4f}] (p={r.p_value:.3f})")
+                cells.append(
+                    f"{r.difference:+.{digits}f} [{r.low:+.{digits}f}, {r.high:+.{digits}f}] (p={r.p_value:.3f})"
+                )
             rows.append([f"{pretty(a)} menos {pretty(b)}", POINT_TEXT[point], *cells])
     return _md(["Comparación (A menos B)", "Punto de operación", "Diferencia de Recall", "Diferencia de FPR"], rows)
 
@@ -348,6 +377,7 @@ TABLES = {
     "tabla_modelos": tabla_modelos,
     "tabla_semillas": tabla_semillas,
     "tabla_pareadas": tabla_pareadas,
+    "tabla_diferencias_semillas": tabla_diferencias_semillas,
     "tabla_oficial": tabla_oficial,
     "tabla_ablacion": tabla_ablacion,
     "tabla_fuga": tabla_fuga,

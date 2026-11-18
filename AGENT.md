@@ -35,7 +35,7 @@ Desarrollar un prototipo basado en aprendizaje automático capaz de identificar 
 
 ### 3.2 Objetivos Específicos
 1. Descargar, limpiar y preparar dos datasets públicos de tráfico de red: UNSW-NB15 (dataset principal declarado en el Entregable 1) y CICIDS2017 (contraste y validación de estabilidad), con evaluación libre de fuga de datos.
-2. Entrenar y comparar Random Forest, XGBoost y un ensamble por votación suave de ambos (mix). Por indicación de la docente se limita el alcance a pocos modelos, y el aporte distintivo es mejorar lo reportado en los antecedentes: cada modelo se entrena en versión base (configuración típica de la literatura) y en versión mejorada (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral de decisión calibrado en validación). SVM, MLP y CART quedan fuera de alcance.
+2. Entrenar y comparar Random Forest, XGBoost y un ensamble por votación suave de ambos (mix). Por indicación de la docente se limita el alcance a pocos modelos, y el aporte distintivo es mejorar lo reportado en los antecedentes: cada modelo se entrena en versión base (configuración del Entregable 1, sección 8.4) y en versión mejorada (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral de decisión calibrado en validación). SVM, MLP y CART quedan fuera de alcance.
 3. Evaluar cuantitativamente el rendimiento de cada modelo mediante métricas formales (Accuracy, Precision, Recall, F1-score y False Positive Rate), analizando de forma rigurosa la frontera entre detección efectiva y falsas alarmas.
 4. Construir un prototipo funcional en Python (`train.py`, `predict.py`, `evaluate.py`) estructurado para operar tanto por lotes como en inferencia sobre flujos individuales.
 
