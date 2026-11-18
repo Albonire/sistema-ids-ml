@@ -77,6 +77,7 @@ def download_all(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Download the project datasets.")
     parser.add_argument("--dataset", choices=[*config.DATASETS, "all"], default="all")
     parser.add_argument("--force", action="store_true", help="re-download all files")

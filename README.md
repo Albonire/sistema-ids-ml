@@ -26,7 +26,7 @@ Proyecto desarrollado para la asignatura **Seguridad Informática**.
 2. **XGBoost**: Gradient boosting, referencia en datos tabulares.
 3. **Mix (RF + XGBoost)**: Votación suave de ambos.
 
-Cada uno en versión **base** (configuración típica de la literatura) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral calibrado en validación).
+Cada uno en versión **base** (configuración del Entregable 1, sección 8.4) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral calibrado en validación).
 
 ---
 
@@ -61,6 +61,7 @@ proyecto/
 |   |-- train.py           # Entrenamiento multimodelo
 |   |-- predict.py         # Inferencia por lotes o flujo individual
 |   |-- evaluate.py        # Figuras, ROC y resultados.md
+|   |-- experiments.py     # Semillas, pruebas pareadas, particiones oficiales, ablacion
 |   `-- demo.py            # Datos para la demo visual y flujos de ejemplo
 |-- app/demo_app.py        # Demo visual (Streamlit)
 |-- tests/                 # Pruebas unitarias (pytest)
@@ -79,6 +80,8 @@ python -m src.preprocess --dataset all               # limpieza a data/processed
 python -m src.train --dataset unsw_nb15              # entrena y elige el mejor modelo
 python -m src.leakage_ablation --dataset unsw_nb15   # ablacion: efecto de los duplicados
 python -m src.evaluate --dataset unsw_nb15           # figuras y reports/unsw_nb15/resultados.md
+python -m src.experiments --dataset unsw_nb15        # experimentos formales (5 semillas, pruebas pareadas, ablacion)
+python -m src.experiments_report --dataset unsw_nb15 # reports/unsw_nb15/experimentos.md
 python -m src.predict --dataset unsw_nb15 --input flujos.csv
 python -m pytest -q                                            # pruebas unitarias
 streamlit run app/demo_app.py                        # demo visual en el navegador

@@ -1,0 +1,84 @@
+@page { size: A4; margin: 18mm 17mm 20mm 17mm; }
+:root { --ink:#1f2430; --muted:#5b6070; --blue:#2a78d6; --orange:#eb6834; --line:#d9dce3; --soft:#f3f5f9; }
+* { box-sizing: border-box; }
+html { font-family: "Inter", "DejaVu Sans", sans-serif; font-size: 9.6pt; color: var(--ink); line-height: 1.5; }
+body { margin: 0; }
+h1, h2, h3, h4 { font-family: "Inter Display", "Inter", sans-serif; line-height: 1.2; color: var(--ink); }
+h1 { font-size: 20pt; margin: 0 0 6mm; padding-bottom: 2.5mm; border-bottom: 2.5px solid var(--blue); page-break-before: always; break-after: avoid; }
+h1.sin-salto { page-break-before: avoid; }
+h2 { font-size: 13.5pt; margin: 7mm 0 2.5mm; color: var(--blue); break-after: avoid; }
+h3 { font-size: 11pt; margin: 5mm 0 2mm; break-after: avoid; }
+h4 { font-size: 9.8pt; margin: 4mm 0 1.5mm; color: var(--muted); break-after: avoid; }
+p { margin: 0 0 2.6mm; text-align: left; orphans: 3; widows: 3; }
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin-bottom: 1mm; }
+a { color: var(--blue); text-decoration: none; }
+code { font-family: "JetBrains Mono", monospace; font-size: 0.88em; background: var(--soft); padding: 0 1.2mm; border-radius: 1mm; }
+pre { font-family: "JetBrains Mono", monospace; font-size: 7.4pt; line-height: 1.38; background: #fafbfd; border: 1px solid var(--line); border-left: 3px solid var(--blue); border-radius: 1.5mm; padding: 2.5mm 3mm; margin: 0 0 3.5mm; white-space: pre-wrap; word-break: break-word; }
+pre code { background: none; padding: 0; font-size: inherit; }
+blockquote { margin: 0 0 3mm; padding: 1.5mm 4mm; border-left: 3px solid var(--line); color: var(--muted); }
+table { width: 100%; border-collapse: collapse; margin: 1mm 0 4mm; font-size: 8pt; line-height: 1.35; break-inside: auto; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { background: var(--ink); color: #fff; text-align: left; font-weight: 600; padding: 1.6mm 2mm; }
+td { padding: 1.3mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:nth-child(even) td { background: var(--soft); }
+figure { margin: 3mm 0 4.5mm; text-align: center; break-inside: avoid; }
+figure img, p > img { max-width: 100%; max-height: 118mm; }
+figcaption { font-size: 8pt; color: var(--muted); margin-top: 1.5mm; }
+.figura-mediana img { max-width: 78%; }
+.figura-pequena img { max-width: 56%; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 4mm 0; }
+math { font-size: 1.08em; }
+math[display="block"] { margin: 2mm 0; }
+
+/* callouts */
+.nota, .advertencia, .ejemplo, .importante, .definicion, .pregunta { margin: 0 0 4mm; padding: 2.4mm 3.5mm; border-radius: 1.5mm; border-left: 4px solid; break-inside: avoid; }
+.nota { background: #eef4fd; border-color: var(--blue); }
+.advertencia { background: #fdeee7; border-color: var(--orange); }
+.ejemplo { background: #eefaf4; border-color: #1baf7a; }
+.importante { background: #fff6e0; border-color: #eda100; }
+.definicion { background: #f3f0fb; border-color: #7a5bd1; }
+.pregunta { background: #f3f5f9; border-color: var(--muted); }
+.nota > :last-child, .advertencia > :last-child, .ejemplo > :last-child, .importante > :last-child, .definicion > :last-child, .pregunta > :last-child { margin-bottom: 0; }
+.nota::before, .advertencia::before, .ejemplo::before, .importante::before, .definicion::before { display: block; font-weight: 700; font-size: 7.6pt; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1mm; }
+.nota::before { content: "Nota"; color: var(--blue); }
+.advertencia::before { content: "Ojo"; color: var(--orange); }
+.ejemplo::before { content: "Ejemplo"; color: #148a5f; }
+.importante::before { content: "Idea clave"; color: #a87500; }
+.definicion::before { content: "Definición"; color: #7a5bd1; }
+
+/* cover */
+.portada { page-break-after: always; min-height: 250mm; display: flex; flex-direction: column; justify-content: center; padding: 0 4mm; }
+.portada .institucion { font-size: 10pt; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-bottom: 14mm; }
+.portada .tipo { font-size: 11pt; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4mm; }
+.portada .titulo { font-family: "Inter Display", "Inter", sans-serif; font-size: 30pt; font-weight: 800; line-height: 1.1; margin-bottom: 5mm; }
+.portada .subtitulo { font-size: 13pt; color: var(--muted); margin-bottom: 20mm; max-width: 150mm; }
+.portada .datos { font-size: 10pt; line-height: 1.7; border-top: 3px solid var(--blue); padding-top: 5mm; }
+.portada .datos b { display: inline-block; min-width: 28mm; color: var(--muted); font-weight: 600; }
+
+/* table of contents */
+nav#TOC { page-break-after: always; }
+nav#TOC::before { content: "Contenido"; display: block; font-family: "Inter Display", sans-serif; font-size: 20pt; font-weight: 700; border-bottom: 2.5px solid var(--blue); padding-bottom: 2.5mm; margin-bottom: 5mm; }
+nav#TOC ul { list-style: none; padding-left: 0; margin: 0; }
+nav#TOC ul ul { padding-left: 5mm; }
+nav#TOC li { margin: 0; line-height: 1.55; overflow: hidden; }
+nav#TOC > ul > li { margin-top: 1.6mm; font-weight: 600; }
+nav#TOC > ul > li > ul { font-weight: 400; }
+nav#TOC a { color: var(--ink); }
+nav#TOC .pg { float: right; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 3mm; }
+.header-section-number { color: var(--blue); margin-right: 1.5mm; }
+
+/* spoken text of the script */
+.decir { margin: 0 0 4mm; padding: 3mm 4.5mm; background: #f7f9fd; border-left: 4px solid var(--blue); border-radius: 1.5mm; font-size: 10.6pt; line-height: 1.65; }
+.decir p:last-child { margin-bottom: 0; }
+.relevo { margin: 0 0 5mm; padding: 1.6mm 3.5mm; border-left: 4px solid var(--orange); background: #fdf3ee; font-size: 9pt; }
+.relevo p { margin: 0; }
+.tiempo { display: inline-block; background: var(--ink); color: #fff; font-size: 8pt; font-weight: 600; padding: 0.4mm 2.2mm; border-radius: 1mm; margin-right: 2mm; }
+
+/* keep a script block together with its heading and time badge */
+.decir, .relevo { break-inside: avoid; }
+p:has(> .tiempo) { break-after: avoid; margin-bottom: 1.5mm; }
+
+/* one slide (or backup slide) per page in the slide content document */
+h2.nueva-pagina { page-break-before: always; margin-top: 0; padding-bottom: 2mm; border-bottom: 1.5px solid var(--line); }

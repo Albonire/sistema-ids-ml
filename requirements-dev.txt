@@ -3,3 +3,6 @@ pytest>=8.0.0
 nbconvert>=7.0.0
 ipykernel>=6.0.0
 nbformat>=5.9.0
+ruff>=0.6.0
+mypy>=1.10.0
+pandas-stubs

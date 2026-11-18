@@ -69,3 +69,6 @@ Thumbs.db
 
 !docs/demo/*.csv
 !reports/**/*.csv
+
+# Build output of the delivery documents
+docs/entrega/_build/

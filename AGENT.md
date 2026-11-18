@@ -8,7 +8,7 @@
   - Fabian (Coordinación, Arquitectura de Software y Pipeline)
   - Silvana - GitHub: `inana20` (Investigación, Preprocesamiento y Modelos)
   - Raul - GitHub: `Raul-2112` (Métricas, Evaluación de Resultados y Documentación)
-- **Fase actual**: Implementación del prototipo (Entregable 2, semanas 10 a 12). El Entregable 1 (`Entregable1_IDS_Proyecto_actualizado.docx`) ya fue presentado a la docente.
+- **Fase actual**: Cierre del proyecto (Entregable 3): experimentación formal, informe final y sustentación. El prototipo, la demostración y los experimentos ya están implementados. El Entregable 1 (`Entregable1_IDS_Proyecto_actualizado.docx`) ya fue presentado a la docente.
 
 ---
 
@@ -35,7 +35,7 @@ Desarrollar un prototipo basado en aprendizaje automático capaz de identificar 
 
 ### 3.2 Objetivos Específicos
 1. Descargar, limpiar y preparar dos datasets públicos de tráfico de red: UNSW-NB15 (dataset principal declarado en el Entregable 1) y CICIDS2017 (contraste y validación de estabilidad), con evaluación libre de fuga de datos.
-2. Entrenar y comparar Random Forest, XGBoost y un ensamble por votación suave de ambos (mix). Por indicación de la docente se limita el alcance a pocos modelos, y el aporte distintivo es mejorar lo reportado en los antecedentes: cada modelo se entrena en versión base (configuración típica de la literatura) y en versión mejorada (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral de decisión calibrado en validación). SVM, MLP y CART quedan fuera de alcance.
+2. Entrenar y comparar Random Forest, XGBoost y un ensamble por votación suave de ambos (mix). Por indicación de la docente se limita el alcance a pocos modelos, y el aporte distintivo es mejorar lo reportado en los antecedentes: cada modelo se entrena en versión base (configuración del Entregable 1, sección 8.4) y en versión mejorada (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral de decisión calibrado en validación). SVM, MLP y CART quedan fuera de alcance.
 3. Evaluar cuantitativamente el rendimiento de cada modelo mediante métricas formales (Accuracy, Precision, Recall, F1-score y False Positive Rate), analizando de forma rigurosa la frontera entre detección efectiva y falsas alarmas.
 4. Construir un prototipo funcional en Python (`train.py`, `predict.py`, `evaluate.py`) estructurado para operar tanto por lotes como en inferencia sobre flujos individuales.
 
@@ -114,6 +114,8 @@ proyecto/
 |   |-- train.py           # Entrenamiento y seleccion del mejor modelo
 |   |-- predict.py         # Inferencia por lotes o flujo individual
 |   |-- evaluate.py        # Figuras y resultados.md
+|   |-- experiments.py     # Semillas, pruebas pareadas, particiones oficiales y ablacion
+|   |-- experiments_report.py # Reporte en espanol de los experimentos
 |   |-- demo.py            # Datos para la demo visual y flujos de ejemplo
 |   `-- utils/             # Hash de archivos y escaladores
 |-- app/demo_app.py        # Demo visual (streamlit run app/demo_app.py)
@@ -136,6 +138,8 @@ proyecto/
 - **`src/evaluate.py`** (`python -m src.evaluate --dataset <...>`):
   - Matrices de confusión normalizadas, curvas ROC y Precision-Recall, comparativa FPR/Recall, detección por tipo de ataque e importancia de características.
   - Escribe `reports/<dataset>/resultados.md` con intervalos de confianza bootstrap.
+- **`src/experiments.py`** (`python -m src.experiments --dataset <...> --task seeds|differences|pairwise|official|features|all`):
+  - Repite el protocolo con cinco semillas (con reanudación si se interrumpe), compara modelos con bootstrap pareado, evalúa las particiones oficiales de UNSW-NB15 y reentrena sin grupos de variables sospechosas de atajo. `python -m src.experiments_report --dataset <...>` genera `reports/<dataset>/experimentos.md`.
 - **`app/demo_app.py`** (`streamlit run app/demo_app.py`):
   - Demo visual sobre los resultados ya generados: limpieza de datos, clasificación en vivo, umbral interactivo, comparación de modelos y ablación de fuga de datos. La lógica está en `src/demo.py`.
 

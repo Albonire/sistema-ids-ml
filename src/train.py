@@ -265,7 +265,7 @@ def run(
 
     np.savez_compressed(
         dataset.models_dir / "scores.npz",
-        **scores,
+        **scores,  # type: ignore[arg-type]  # numpy types **kwargs as allow_pickle
         y_val=splits.val.y.to_numpy(),
         y_test=splits.test.y.to_numpy(),
         attack_val=splits.val.attack.to_numpy().astype(str),
@@ -289,7 +289,10 @@ def run(
             t.name: {
                 "label": f"{ALGORITHM_LABELS[t.algorithm]} ({t.variant})",
                 "fit_seconds": round(t.fit_seconds, 1),
-                "best_params": {k: (v if v is None or isinstance(v, (int, float, str)) else str(v)) for k, v in t.best_params.items()},
+                "best_params": {
+                    k: (v if v is None or isinstance(v, (int, float, str)) else str(v))
+                    for k, v in t.best_params.items()
+                },
                 "cv_average_precision": t.cv_average_precision,
                 "note": ensemble_note if t.algorithm == "mix" else "",
             }
@@ -378,6 +381,7 @@ def rescore(dataset_key: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Train the IDS models.")
     parser.add_argument("--dataset", choices=list(config.DATASETS), required=True)
     parser.add_argument("--n-iter", type=int, default=8, help="random search candidates")

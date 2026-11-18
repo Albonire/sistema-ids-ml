@@ -15,7 +15,7 @@ python -m src.train --dataset unsw_nb15       # unos 7 minutos con 4 CPU
 python -m src.train --dataset cicids2017      # entre 15 y 25 minutos con 4 CPU
 python -m src.evaluate --dataset unsw_nb15
 python -m src.evaluate --dataset cicids2017
-python -m pytest -q                                     # 40 pruebas
+python -m pytest -q                                     # 61 pruebas
 ```
 
 Se usa `python -m pytest` y no `pytest` a secas: el shell puede tener en caché un `pytest` de fuera del entorno virtual (por ejemplo en `~/.local/bin`), que no ve `xgboost` y falla al importar. Si se prefiere el comando corto, ejecutar `hash -r` tras activar el entorno.
@@ -45,7 +45,7 @@ Ojo: ese comando **sobrescribe** `models/unsw_nb15/` y `reports/unsw_nb15/`. Des
 ## 2. Qué se comparó (1 minuto)
 
 - Datasets: UNSW-NB15 (principal, el del Entregable 1) y CICIDS2017 (contraste).
-- Modelos: Random Forest, XGBoost y su mezcla por votación suave, cada uno en versión **base** (configuración típica de la literatura) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds, umbral elegido en validación).
+- Modelos: Random Forest, XGBoost y su mezcla por votación suave, cada uno en versión **base** (configuración del Entregable 1, sección 8.4) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds, umbral elegido en validación).
 - Partición 70/15/15 estratificada. La prueba no se usa para decidir nada.
 - Alcance acotado a pocos modelos por indicación de la docente.
 
@@ -104,7 +104,7 @@ Modelo ganador en UNSW-NB15 (prueba: 10.195 ataques y 12.796 flujos normales):
 - **Ningún modelo cumple Recall >= 0.95 y FPR <= 0.02 en UNSW-NB15.** Pasar de FPR 2 % a Recall 95 % multiplica las falsas alarmas por seis.
 - Las familias difíciles son Fuzzers (detección 0.70 con umbral 0.5) y Analysis (0.55).
 - CICIDS2017 está saturado: con umbral 0.5, XGBoost tiene Recall 0.9985 y FPR 0.0003, y los seis modelos cumplen el criterio. Por eso no discrimina entre modelos.
-- Respuesta a la pregunta de investigación: XGBoost (base o mejorado) da el mejor equilibrio en ambos datasets; la mezcla con RF no aporta una ventaja demostrable.
+- Respuesta a la pregunta de investigación: XGBoost (base o mejorado) da el mejor equilibrio en ambos datasets; la mezcla con RF no aporta una ventaja sobre XGBoost mejorado.
 
 ## 6. Qué aporta el trabajo: evaluar sin fuga de datos (1 minuto)
 
@@ -118,9 +118,31 @@ Con un protocolo ingenuo (sin quitar duplicados), el 44,5 % de la prueba de UNSW
 
 Dicho con honestidad:
 
-- La versión "mejorada" no supera a la base de forma demostrable en UNSW-NB15 (los intervalos de confianza se solapan). Lo defendible es el protocolo sin fuga y el análisis por punto de operación.
-- Limitaciones: una sola semilla y partición; búsqueda de hiperparámetros acotada.
+- La versión "mejorada" supera a la base solo en XGBoost, y de forma pequeña pero consistente (en las 5 semillas de UNSW-NB15); en Random Forest y en el Mix no. Lo defendible es el protocolo sin fuga y el análisis por punto de operación.
+- Limitaciones: la búsqueda de hiperparámetros no se repitió por semilla; dos datasets de laboratorio.
 - Siguiente: repetir con varias semillas, ablación de variables sospechosas de atajos (`sttl`, `state_INT`, `Destination Port`) e informe final.
+
+## Alternativa: demo visual en el navegador
+
+La carpeta `app/` trae una demo interactiva (Streamlit) que reúne en una sola pantalla lo que las secciones 3 a 6 muestran con comandos. Sirve si se prefiere proyectar una interfaz en lugar de la terminal.
+
+Requisitos (se generan en la sección 0): `python -m src.preprocess`, `python -m src.train` y los reportes de `reports/` (ya vienen en Git). Si falta algo, la propia app lo avisa y muestra el comando que corresponde.
+
+```bash
+streamlit run app/demo_app.py      # abre http://localhost:8501
+```
+
+La barra lateral elige el dataset y el punto de operación (umbral 0.5, mínimo FPR con Recall >= 0.95 o máximo Recall con FPR <= 0.02). Cada pestaña equivale a una parte de este guion:
+
+| Pestaña | Qué muestra | Parte del guion |
+|---|---|---|
+| 1. Datos | Flujos crudos, cuántos se eliminan en cada paso de limpieza y la distribución por tipo de tráfico | 3 |
+| 2. Clasificar en vivo | Los flujos de ejemplo (o un CSV subido, o un flujo en JSON) con su probabilidad de ataque, la decisión y si fue acierto, falsa alarma o ataque no detectado | 4 |
+| 3. Umbral interactivo | Un control deslizante del umbral que actualiza al instante Recall, FPR, matriz de confusión, curva ROC y detección por familia, con aviso de si se cumple el criterio del proyecto | 5 |
+| 4. Comparación de modelos | Los seis modelos en un mismo plano FPR contra Recall, importancia de variables y detección por familia | 5 |
+| 5. Fuga de datos | La ablación de duplicados: cuánto sube la métrica con el protocolo ingenuo | 6 |
+
+Sugerencia para la clase: en la pestaña 3 con UNSW-NB15, partir del umbral guardado de FPR <= 0.02 (FPR 0.0205, Recall 0.8238) y bajarlo hasta el de Recall 0.95 (FPR 0.1222) hace visible cómo las falsas alarmas se multiplican por seis, que es el mensaje central de la sección 5.
 
 ## Preguntas probables
 
@@ -128,7 +150,7 @@ Dicho con honestidad:
 
 **¿Por qué el FPR es de 12 % para tener Recall 0.95?** Porque las clases se solapan: Fuzzers y Analysis se parecen al tráfico normal. La curva ROC (`roc.png`) lo muestra: ningún algoritmo comparado la mejora de forma apreciable.
 
-**¿Por qué la versión mejorada no es mejor?** En UNSW-NB15 las diferencias están dentro del ruido de muestreo. En CICIDS2017 el dataset está saturado. En RF incluso empeora con umbral 0.5 en CICIDS2017, porque la búsqueda sobre una muestra de 60.000 flujos eligió profundidad 12.
+**¿Por qué la versión mejorada no es mejor siempre?** En XGBoost gana en las 5 semillas de UNSW-NB15, pero poco (el FPR con Recall 0.95 baja en promedio 0.0053). En Random Forest y en el Mix no hay mejora consistente. En CICIDS2017 el dataset está saturado. En RF incluso empeora con umbral 0.5 en CICIDS2017, porque la búsqueda sobre una muestra de 60.000 flujos eligió profundidad 12.
 
 **¿Qué significa que el criterio sea "degenerado"?** "Mínimo FPR con Recall >= 0.95" empuja el Recall hasta 0.95 aunque el modelo pueda dar 0.998. En CICIDS2017 baja las falsas alarmas de 102 a 13, pero los ataques no detectados pasan de 97 a 3.158. Por eso se reportan tres puntos de operación.
 
@@ -136,4 +158,4 @@ Dicho con honestidad:
 
 **¿Por qué no se usó SMOTE?** El desbalance de UNSW-NB15 es moderado (56 % normal) y el umbral elegido en validación ya controla el compromiso entre falsas alarmas y detección. Si se aplicara, sería solo sobre el entrenamiento.
 
-**¿Se puede reproducir?** Sí: descarga con SHA256, `random_state=42` y 40 pruebas. Los comandos están en la sección 0.
+**¿Se puede reproducir?** Sí: descarga con SHA256, `random_state=42` y 61 pruebas. Los comandos están en la sección 0.

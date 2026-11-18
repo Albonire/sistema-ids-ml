@@ -50,6 +50,7 @@ ALGORITHM_ES = {"rf": "Random Forest", "xgb": "XGBoost", "mix": "Mix RF + XGB"}
 
 
 def pretty(name: str) -> str:
+    """Spanish display name of a model key such as 'xgb_improved'."""
     algorithm, variant = name.split("_")
     return f"{ALGORITHM_ES[algorithm]} ({VARIANT_ES[variant]})"
 
@@ -69,7 +70,7 @@ def plot_confusion_matrices(scores: Any, summary: dict[str, Any], out: Path) -> 
     """Row-normalised confusion matrices on test at the recall-target threshold."""
     y = scores["y_test"]
     fig, axes = plt.subplots(2, 3, figsize=(13, 8))
-    for ax, name in zip(axes.T.ravel(), MODEL_ORDER):
+    for ax, name in zip(axes.T.ravel(), MODEL_ORDER, strict=False):
         predicted = scores[f"{name}_test"] >= summary["thresholds"][name]["recall_target"]
         matrix = np.array(
             [[(predicted[y == t] == p).mean() for p in (False, True)] for t in (0, 1)]
@@ -111,6 +112,7 @@ def plot_roc(scores: Any, out: Path) -> None:
 
 
 def plot_precision_recall(scores: Any, out: Path) -> None:
+    """Precision-recall curves of every model on the test set."""
     y = scores["y_test"]
     fig, ax = plt.subplots(figsize=(7, 5))
     for name in MODEL_ORDER:
@@ -165,12 +167,14 @@ def detection_by_attack_type(scores: Any, model: str, thresholds: dict[str, floa
 
 
 def plot_attack_types(table: pd.DataFrame, title: str, out: Path) -> None:
+    """Grouped bars of the share flagged as attack per family and operating point."""
     fig, ax = plt.subplots(figsize=(9, 0.55 * len(table) + 2))
     positions = np.arange(len(table))
     height = 0.27
     for k, point in enumerate(OPERATING_POINTS):
         ax.barh(positions + (k - 1) * height, table[point].to_numpy(), height=height, label=POINT_LABELS[point])
-    ax.set_yticks(positions, [f"{name} (n={int(n)})" for name, n in zip(table.index, table["n"])], fontsize=8)
+    labels = [f"{name} (n={int(n)})" for name, n in zip(table.index, table["n"], strict=False)]
+    ax.set_yticks(positions, labels, fontsize=8)
     ax.set_xlim(0, 1.05)
     ax.set_xlabel("Proporción marcada como ataque (BENIGN = tasa de falsas alarmas)")
     ax.set_title(title, fontsize=10)
@@ -179,8 +183,9 @@ def plot_attack_types(table: pd.DataFrame, title: str, out: Path) -> None:
 
 
 def plot_importances(summary: dict[str, Any], out: Path, top: int = 15) -> None:
+    """Top feature importances of the improved Random Forest and XGBoost."""
     fig, axes = plt.subplots(1, 2, figsize=(14, 5.5))
-    for ax, name in zip(axes, ("rf_improved", "xgb_improved")):
+    for ax, name in zip(axes, ("rf_improved", "xgb_improved"), strict=False):
         importances = pd.Series(summary["feature_importances"][name]).head(top)[::-1]
         ax.barh(importances.index, importances.values, color=COLORS[name.split("_")[0]])
         ax.set_title(f"Importancia de características: {pretty(name)}")
@@ -220,7 +225,7 @@ def write_markdown(
         "el ruido de muestreo del conjunto de prueba. Dos modelos con intervalos solapados no deben "
         "considerarse distintos.",
         "",
-        "## 1. Umbral fijo 0.5 (forma habitual en la literatura)",
+        "## 1. Umbral fijo 0.5 (valor por defecto de los clasificadores)",
         "",
         "| Modelo | Accuracy | Precisión | Recall | F1 | FPR | FPR IC 95 % | ROC-AUC | PR-AUC |",
         "|---|---|---|---|---|---|---|---|---|",
@@ -235,7 +240,12 @@ def write_markdown(
         )
     for point, marker, heading, chosen in (
         ("recall_target", "*", f"## 2. Mínimo FPR con Recall >= {config.RECALL_TARGET} (criterio de AGENT.md)", best),
-        ("fpr_budget", "†", f"## 3. Máximo Recall con FPR <= {config.FPR_TARGET} (presupuesto de falsas alarmas)", best_budget),
+        (
+            "fpr_budget",
+            "†",
+            f"## 3. Máximo Recall con FPR <= {config.FPR_TARGET} (presupuesto de falsas alarmas)",
+            best_budget,
+        ),
     ):
         lines += [
             "",
@@ -283,7 +293,8 @@ def write_markdown(
         "| Tipo | n | umbral 0.5 | Recall >= objetivo | FPR <= presupuesto |",
         "|---|---|---|---|---|",
     ]
-    for name, row in table.sort_values("recall_target", ascending=False).iterrows():
+    for family, row in table.sort_values("recall_target", ascending=False).iterrows():
+        name = str(family)
         suffix = " (falsas alarmas)" if name == config.BENIGN_LABEL else ""
         lines.append(
             f"| {name}{suffix} | {int(row['n'])} | {_fmt(row['default'])} | "
@@ -305,6 +316,7 @@ def write_markdown(
 
 
 def run(dataset_key: str) -> None:
+    """Build every figure and the Spanish summary of a dataset."""
     dataset = config.get_dataset(dataset_key)
     scores = np.load(dataset.models_dir / "scores.npz")
     metrics = pd.read_csv(dataset.reports_dir / "metrics.csv")
@@ -326,6 +338,7 @@ def run(dataset_key: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Build the evaluation report.")
     parser.add_argument("--dataset", choices=list(config.DATASETS), required=True)
     args = parser.parse_args(argv)

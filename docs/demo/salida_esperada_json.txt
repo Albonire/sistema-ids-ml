@@ -1,0 +1,7 @@
+{
+  "classification": "Ataque Detectado",
+  "attack_probability": 0.998622,
+  "operating_point": "recall_target",
+  "threshold": 0.338346,
+  "model": "xgb_improved"
+}

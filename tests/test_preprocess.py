@@ -37,7 +37,7 @@ def test_clean_builds_targets_and_dtypes(raw_frame: pd.DataFrame) -> None:
     assert set(cleaned.columns) == {"a", "b", "c", config.LABEL_COLUMN, config.ATTACK_TYPE_COLUMN}
     assert cleaned[config.LABEL_COLUMN].dtype == np.int8
     assert cleaned["a"].dtype == np.float32
-    mapping = dict(zip(cleaned[config.ATTACK_TYPE_COLUMN], cleaned[config.LABEL_COLUMN]))
+    mapping = dict(zip(cleaned[config.ATTACK_TYPE_COLUMN], cleaned[config.LABEL_COLUMN], strict=False))
     assert mapping["BENIGN"] == 0
     assert mapping["DoS Hulk"] == 1
     assert mapping["Web Attack - Brute Force"] == 1
