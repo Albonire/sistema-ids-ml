@@ -180,7 +180,7 @@ def seeds_section(dataset: config.DatasetSource) -> list[str]:
     ]
     for point in OPERATING_POINTS:
         lines += [
-            f"### {POINT_LABELS[point].capitalize()}",
+            f"### {POINT_LABELS[point].capitalize().replace('fpr', 'FPR').replace('recall', 'Recall')}",
             "",
             "| Modelo | Recall | FPR | Precisión | Accuracy | ROC-AUC |",
             "|---|---|---|---|---|---|",

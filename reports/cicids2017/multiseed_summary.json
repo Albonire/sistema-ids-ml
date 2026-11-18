@@ -1,0 +1,33 @@
+{
+  "seeds": [
+    42,
+    1,
+    2,
+    3,
+    4
+  ],
+  "hyperparameters_from_seed": 42,
+  "best_by_seed": {
+    "1": {
+      "recall_target": "xgb_baseline",
+      "fpr_budget": "xgb_improved"
+    },
+    "2": {
+      "recall_target": "xgb_baseline",
+      "fpr_budget": "mix_baseline"
+    },
+    "3": {
+      "recall_target": "xgb_baseline",
+      "fpr_budget": "mix_baseline"
+    },
+    "4": {
+      "recall_target": "xgb_baseline",
+      "fpr_budget": "xgb_baseline"
+    },
+    "42": {
+      "recall_target": "xgb_improved",
+      "fpr_budget": "xgb_improved"
+    }
+  },
+  "primary_reproduction": null
+}

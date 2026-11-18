@@ -44,19 +44,19 @@ splits = make_splits(load_processed("unsw_nb15"))   # splits.train / .val / .tes
 |---|---|
 | Filas crudas (8 archivos) | 2.830.743 |
 | Con infinitos o NaN (eliminadas) | 2.867 |
-| Duplicados exactos (eliminadas) | 307.078 |
-| Etiquetas conflictivas (eliminadas) | 1.394 |
-| Filas finales | 2.519.404 |
+| Duplicados (eliminadas) | 329.896 |
+| Vectores contradictorios (eliminadas) | 1.436 |
+| Filas finales | 2.496.544 |
 
 El total crudo coincide con la cifra publicada del dataset. Variables finales: 69 (77 únicas menos 8 constantes: `Bwd PSH Flags`, `Bwd URG Flags` y las seis variables `Avg Bytes/Packets/Bulk Rate` de ambos sentidos).
 
-Distribución final: 2.094.360 flujos normales (83,1 por ciento) y 425.044 ataques (16,9 por ciento). Clases más pequeñas: Heartbleed 11, SQL Injection 21, Infiltration 36. La partición 70/15/15 deja 1.763.582 flujos de entrenamiento, 377.911 de validación y 377.911 de prueba, con las 15 clases presentes en los tres conjuntos.
+Distribución final: 2.071.536 flujos normales (83,0 por ciento) y 425.008 ataques (17,0 por ciento). Clases más pequeñas: Heartbleed 11, SQL Injection 21, Infiltration 36. La partición 70/15/15 deja 1.747.580 flujos de entrenamiento, 374.482 de validación y 374.482 de prueba, con las 15 clases presentes en los tres conjuntos.
 
 El análisis de correlación (`notebooks/01_eda_cicids2017.ipynb`) muestra 38 pares con |r| > 0,95 y 22 variables candidatas a eliminarse por redundancia; varias parejas son idénticas (por ejemplo `Total Fwd Packets` y `Subflow Fwd Packets`). Esta reducción queda para la fase de selección de características, donde se evaluará con validación y no solo con correlación.
 
 ## 5. Implicaciones para la evaluación
 
-- **Desbalance**: la Accuracy es engañosa; un clasificador que siempre diga "normal" obtendría 83 por ciento. Por eso el criterio del proyecto es Recall y FPR.
+- **Desbalance**: la Accuracy es engañosa; un clasificador que siempre diga "normal" obtendría 83 por ciento (83,0 por ciento en CICIDS2017 y 55,7 por ciento en UNSW-NB15 tras la limpieza). Por eso el criterio del proyecto es Recall y FPR.
 - **Limitaciones conocidas del dataset**: la literatura documenta errores de construcción de flujos, extracción de características y etiquetado en CICIDS2017, que afectan los resultados de los modelos. Este pipeline no los corrige (requeriría reprocesar los PCAP); deben mencionarse como amenaza a la validez en el informe final.
   - Engelen, G., Rimmer, V. y Joosen, W. (2021). "Troubleshooting an Intrusion Detection Dataset: the CICIDS2017 Case Study". IEEE Security and Privacy Workshops (SPW), pp. 7-12. DOI 10.1109/SPW53761.2021.00009.
   - Lanvin, M., Gimenez, P.-F., Han, Y., Majorczyk, F., Mé, L. y Totel, E. (2023). "Errors in the CICIDS2017 dataset and the significant differences in detection performances it makes". CRiSIS 2022, Lecture Notes in Computer Science, Springer, pp. 18-33.

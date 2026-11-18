@@ -19,14 +19,14 @@ Cada celda es Recall / FPR del mismo modelo en un punto de operación distinto.
 
 ## Conclusiones
 
-1. XGBoost (base o mejorado) ofrece el mejor equilibrio entre detección y falsas alarmas en ambos datasets; la mezcla con Random Forest no aporta una ventaja demostrable.
+1. XGBoost (base o mejorado) ofrece el mejor equilibrio entre detección y falsas alarmas en ambos datasets; la mezcla con Random Forest no aporta una ventaja sobre XGBoost mejorado.
 2. En UNSW-NB15 **ningún modelo cumple Recall >= 0.95 y FPR <= 0.02**. Subir el Recall de 0.82 a 0.95 multiplica las falsas alarmas por seis. Los errores se concentran en las familias Fuzzers y Analysis.
 3. CICIDS2017 está saturado (todos los modelos superan el criterio con umbral 0.5), por lo que discrimina poco entre algoritmos.
 4. Evaluar sin fuga de datos cambia las cifras: con un protocolo ingenuo, el 44,5 % de la prueba de UNSW-NB15 son vectores repetidos de entrenamiento y el Recall se sobrestima en 5,6 puntos (0.950 frente a 0.894).
 
 ## Advertencias
 
-- La versión "mejorada" no supera de forma demostrable a la base en UNSW-NB15 (intervalos solapados) ni en CICIDS2017 (saturación).
-- Una sola semilla y una sola partición; la búsqueda de hiperparámetros es acotada.
+- La versión "mejorada" supera a la base solo en XGBoost, y poco: gana en las 5 semillas de UNSW-NB15 (el FPR con Recall 0.95 baja en promedio 0.0053). En Random Forest y en el Mix no hay mejora consistente, y en CICIDS2017 no se distingue por saturación.
+- La búsqueda de hiperparámetros no se repitió por semilla (las 5 semillas reutilizan los hiperparámetros de la semilla 42) y es acotada.
 - El criterio literal "mínimo FPR con Recall >= 0.95" es degenerado cuando el modelo es casi perfecto: en CICIDS2017 sacrifica Recall de 0.9985 a 0.9505 (los ataques no detectados pasan de 97 a 3.158). Por eso se reportan tres puntos de operación.
 - CICIDS2017 tiene errores de etiquetado y de construcción de flujos documentados (Engelen et al., 2021), no corregidos aquí.

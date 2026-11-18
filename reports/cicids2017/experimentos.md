@@ -2,6 +2,73 @@
 
 Generado por `python -m src.experiments_report`. Todas las cifras son del conjunto de prueba salvo que se indique otra cosa.
 
+## 1. Repetición con varias semillas
+
+Se repitió la partición 70/15/15 y el ajuste de los seis modelos con las semillas [42, 1, 2, 3, 4]. Cada celda es media ± desviación estándar muestral sobre las semillas, en el conjunto de prueba. Los hiperparámetros de las versiones mejoradas son los de la búsqueda con la semilla 42 y no se volvieron a buscar; además, esos datos de ajuste se solapan con las pruebas de las otras semillas. Por eso la desviación subestima la variación real de repetir también la búsqueda.
+
+### Umbral 0.5
+
+| Modelo | Recall | FPR | Precisión | Accuracy | ROC-AUC |
+|---|---|---|---|---|---|
+| Random Forest (base) | 0.9968 ± 0.0002 | 0.00040 ± 0.00001 | 0.9981 ± 0.0001 | 0.9991 ± 0.0000 | 0.9999 ± 0.0000 |
+| Random Forest (mejorado) | 0.9882 ± 0.0005 | 0.00021 ± 0.00001 | 0.9990 ± 0.0001 | 0.9978 ± 0.0001 | 0.9999 ± 0.0000 |
+| XGBoost (base) | 0.9983 ± 0.0002 | 0.00032 ± 0.00002 | 0.9985 ± 0.0001 | 0.9995 ± 0.0000 | 1.0000 ± 0.0000 |
+| XGBoost (mejorado) | 0.9985 ± 0.0003 | 0.00032 ± 0.00003 | 0.9984 ± 0.0001 | 0.9995 ± 0.0000 | 1.0000 ± 0.0000 |
+| Mix RF + XGB (base) | 0.9984 ± 0.0003 | 0.00032 ± 0.00002 | 0.9985 ± 0.0001 | 0.9995 ± 0.0000 | 1.0000 ± 0.0000 |
+| Mix RF + XGB (mejorado) | 0.9973 ± 0.0003 | 0.00024 ± 0.00003 | 0.9988 ± 0.0002 | 0.9993 ± 0.0000 | 1.0000 ± 0.0000 |
+
+### Mínimo FPR con Recall >= 0.95
+
+| Modelo | Recall | FPR | Precisión | Accuracy | ROC-AUC |
+|---|---|---|---|---|---|
+| Random Forest (base) | 0.9722 ± 0.0003 | 0.00015 ± 0.00001 | 0.9992 ± 0.0001 | 0.9951 ± 0.0001 | 0.9999 ± 0.0000 |
+| Random Forest (mejorado) | 0.9508 ± 0.0018 | 0.00018 ± 0.00002 | 0.9991 ± 0.0001 | 0.9915 ± 0.0003 | 0.9999 ± 0.0000 |
+| XGBoost (base) | 0.9502 ± 0.0014 | 0.00005 ± 0.00001 | 0.9997 ± 0.0000 | 0.9915 ± 0.0002 | 1.0000 ± 0.0000 |
+| XGBoost (mejorado) | 0.9494 ± 0.0014 | 0.00005 ± 0.00001 | 0.9997 ± 0.0000 | 0.9913 ± 0.0002 | 1.0000 ± 0.0000 |
+| Mix RF + XGB (base) | 0.9502 ± 0.0016 | 0.00006 ± 0.00001 | 0.9997 ± 0.0001 | 0.9915 ± 0.0003 | 1.0000 ± 0.0000 |
+| Mix RF + XGB (mejorado) | 0.9504 ± 0.0016 | 0.00016 ± 0.00002 | 0.9992 ± 0.0001 | 0.9914 ± 0.0003 | 1.0000 ± 0.0000 |
+
+### Máximo Recall con FPR <= 0.02
+
+| Modelo | Recall | FPR | Precisión | Accuracy | ROC-AUC |
+|---|---|---|---|---|---|
+| Random Forest (base) | 0.9999 ± 0.0000 | 0.01224 ± 0.00292 | 0.9438 ± 0.0129 | 0.9898 ± 0.0024 | 0.9999 ± 0.0000 |
+| Random Forest (mejorado) | 0.9998 ± 0.0001 | 0.01920 ± 0.00044 | 0.9144 ± 0.0018 | 0.9840 ± 0.0004 | 0.9999 ± 0.0000 |
+| XGBoost (base) | 1.0000 ± 0.0000 | 0.01085 ± 0.00602 | 0.9504 ± 0.0265 | 0.9910 ± 0.0050 | 1.0000 ± 0.0000 |
+| XGBoost (mejorado) | 1.0000 ± 0.0000 | 0.00628 ± 0.00678 | 0.9711 ± 0.0302 | 0.9948 ± 0.0056 | 1.0000 ± 0.0000 |
+| Mix RF + XGB (base) | 1.0000 ± 0.0000 | 0.00956 ± 0.00551 | 0.9560 ± 0.0243 | 0.9921 ± 0.0046 | 1.0000 ± 0.0000 |
+| Mix RF + XGB (mejorado) | 0.9999 ± 0.0000 | 0.01094 ± 0.00486 | 0.9497 ± 0.0212 | 0.9909 ± 0.0040 | 1.0000 ± 0.0000 |
+
+### Qué modelo gana en cada semilla
+
+| Semilla | Regla de AGENT.md (mínimo FPR con Recall >= 0.95) | Presupuesto (máximo Recall con FPR <= 0.02) |
+|---|---|---|
+| 1 | XGBoost (base) | XGBoost (mejorado) |
+| 2 | XGBoost (base) | Mix RF + XGB (base) |
+| 3 | XGBoost (base) | Mix RF + XGB (base) |
+| 4 | XGBoost (base) | XGBoost (base) |
+| 42 | XGBoost (mejorado) | XGBoost (mejorado) |
+
+Victorias con la regla de AGENT.md: XGBoost (base) 4, XGBoost (mejorado) 1. Victorias con el presupuesto de FPR: XGBoost (mejorado) 2, Mix RF + XGB (base) 2, XGBoost (base) 1.
+
+### Versión mejorada menos versión base, semilla por semilla
+
+Diferencia media ± desviación estándar de las diferencias emparejadas por semilla. La última columna cuenta las semillas en que la mejorada gana en la métrica que define el punto (menor FPR con Recall >= 0.95, mayor Recall con FPR <= 0.02, y ambas a la vez con umbral 0.5).
+
+| Algoritmo | Punto de operación | Diferencia de Recall | Diferencia de FPR | Semillas en que gana |
+|---|---|---|---|---|
+| Random Forest | umbral 0.5 | -0.0086 ± 0.0004 | -0.00018 ± 0.00002 | 0 de 5 |
+| Random Forest | Recall >= 0.95 | -0.0214 ± 0.0019 | +0.00003 ± 0.00001 | 0 de 5 |
+| Random Forest | FPR <= 0.02 | -0.0001 ± 0.0001 | +0.00696 ± 0.00301 | 0 de 5 |
+| XGBoost | umbral 0.5 | +0.0001 ± 0.0001 | +0.00001 ± 0.00001 | 2 de 5 |
+| XGBoost | Recall >= 0.95 | -0.0008 ± 0.0004 | +0.00000 ± 0.00001 | 2 de 5 |
+| XGBoost | FPR <= 0.02 | -0.0000 ± 0.0000 | -0.00457 ± 0.00440 | 3 de 5 |
+| Mix RF + XGB | umbral 0.5 | -0.0011 ± 0.0002 | -0.00007 ± 0.00003 | 0 de 5 |
+| Mix RF + XGB | Recall >= 0.95 | +0.0002 ± 0.0019 | +0.00010 ± 0.00002 | 0 de 5 |
+| Mix RF + XGB | FPR <= 0.02 | -0.0000 ± 0.0000 | +0.00138 ± 0.00577 | 0 de 5 |
+
+![Media y desviación sobre semillas](figures/multiseed.png)
+
 ## 2. Pruebas pareadas entre modelos
 
 Bootstrap pareado sobre las mismas filas de prueba (semilla 42), cada modelo con su propio umbral elegido en validación. Diferencia = A menos B, con IC 95 % y p bilateral. Mide solo el ruido de muestreo de la prueba. A diferencia de comparar intervalos separados (que pueden solaparse aunque haya diferencia), la prueba pareada aprovecha que ambos modelos ven los mismos flujos.

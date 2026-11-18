@@ -450,3 +450,270 @@ Otra forma de medir la variación es **repetir todo** (reparto, entrenamiento y 
 {{>tabla_semillas unsw fpr_budget}}
 
 Se lee: cada celda es media ± desviación estándar sobre las 5 semillas. Si la desviación es del orden de las diferencias entre modelos, esas diferencias no son fiables. Limitación importante: los hiperparámetros de las versiones mejoradas **no se volvieron a buscar** en cada semilla, así que esta desviación subestima la variación real de repetir también la búsqueda.
+
+## A.7 Calidad de los datos y fuga de datos
+
+Un modelo aprende **lo que hay en los datos**, incluidos sus defectos. Esta sección explica los problemas que el proyecto encontró en UNSW-NB15 y CICIDS2017 y cómo los trata, porque el **aporte distintivo** del trabajo es evaluar sin fuga de datos.
+
+### Valores infinitos o faltantes
+
+Algunas variables se calculan como cocientes. En CICIDS2017, `Flow Bytes/s` y `Flow Packets/s` dividen entre la duración del flujo; si la duración es 0, el resultado es **infinito**. Los modelos no pueden usar infinitos ni valores faltantes (NaN). El proyecto elimina esas filas: son {{cic.clean.rows_removed_missing}} en CICIDS2017 (una fracción muy pequeña del total) y ninguna en UNSW-NB15. Se eligió eliminar y no imputar (inventar un valor) porque son pocas y así no se introducen datos artificiales.
+
+### Duplicados
+
+Un **duplicado** es un flujo cuyo vector de variables (y etiqueta binaria) es idéntico al de otro. Pasa mucho en datasets de laboratorio: una herramienta de ataque repite la misma petición miles de veces y genera flujos casi iguales, y los datasets tienen muchos flujos triviales repetidos. En UNSW-NB15 el proyecto encontró {{unsw.clean.rows_removed_duplicates}} duplicados, el {{unsw.clean.dup_pct}} de los flujos crudos; en CICIDS2017, {{cic.clean.rows_removed_duplicates}} ({{cic.clean.dup_pct}}).
+
+**Por qué importan.** Si se parten los datos al azar, una copia puede caer en entrenamiento y otra en prueba. Para el modelo eso es **regalar la respuesta**: ya vio ese vector exacto. Es la fuga de datos más común.
+
+### Etiquetas contradictorias
+
+El mismo vector aparece con una etiqueta de normal y con otra de ataque. Es **ruido irreducible**: ningún modelo puede acertar ambos. El proyecto elimina todas esas filas ({{unsw.clean.rows_removed_conflicting}} en UNSW-NB15 y {{cic.clean.rows_removed_conflicting}} en CICIDS2017).
+
+::: nota
+Historia de un error corregido, útil para entender la decisión. La primera versión de la limpieza juzgaba el "conflicto" con la **familia de ataque** y no con la etiqueta binaria. Entonces un vector idéntico etiquetado *DoS* en una fila y *Exploits* en otra se descartaba como contradictorio, aunque ambos son ataques. Como el objetivo es **binario**, eso era un error: descartaba decenas de miles de flujos válidos y hacía desaparecer por completo 126 protocolos poco frecuentes. Ahora el conflicto es solo "normal frente a ataque", y un vector con dos familias de ataque se trata como duplicado (se conserva una fila). Hay una prueba automática que fija este comportamiento.
+:::
+
+### Duplicados casi idénticos y el redondeo a `float32`
+
+Dos flujos pueden diferir en el décimo decimal y ser, para el modelo, el mismo. Los modelos de árboles trabajan con `float32` (precisión de unas 7 cifras). Si se deduplica en `float64` y **después** se convierte a `float32`, dos vectores distintos pueden volverse idénticos y quedar uno en entrenamiento y otro en prueba. El proyecto tenía ese defecto: una pequeña fracción de la prueba de CICIDS2017 (del orden del 1 %) repetía un vector de entrenamiento. Se corrigió convirtiendo a `float32` **antes** de deduplicar. Hoy el protocolo del proyecto tiene {{cic.l.full.leaked_test_share_pct}} de prueba repetida en CICIDS2017 y {{unsw.l.full.leaked_test_share_pct}} en UNSW-NB15.
+
+### Fuga de datos: definición y tipos
+
+::: definicion
+**Fuga de datos** (*data leakage*; Kaufman et al., 2012): que el proceso de entrenamiento o de evaluación use información que no estaría legítimamente disponible al predecir en la vida real. El resultado es una medición **optimista** que no se sostendrá en producción.
+:::
+
+Los tipos de fuga que importan en este proyecto:
+
+| Tipo | Ejemplo | Cómo lo evita el proyecto |
+|---|---|---|
+| **Duplicados entre conjuntos** | La misma fila en entrenamiento y prueba | Se deduplica **antes** de partir, con `float32` |
+| **Transformar con todos los datos** | Ajustar un filtro de variables, un escalador o un codificador con los datos completos y luego partir | Todo se ajusta **solo con el entrenamiento** (dentro de un `Pipeline`); en la validación cruzada se reajusta en cada pliegue |
+| **Decidir con la prueba** | Elegir el umbral o el modelo mirando la prueba | Umbrales y modelo ganador se eligen **en validación**; la prueba solo se mide al final |
+| **Variables que delatan la etiqueta** | Una columna que solo existe por cómo se capturó el ataque (atajo) | Ablación de variables sospechosas (más abajo) |
+| **Fuga temporal o de sesión** | Flujos de la misma campaña de ataque repartidos entre entrenamiento y prueba | **No se midió** (se declara como limitación) |
+
+La última fila es una limitación honesta: el reparto es aleatorio sobre flujos, y flujos del mismo ataque (muy parecidos entre sí) pueden quedar a ambos lados. Es plausible que eso haga el resultado algo optimista, pero el proyecto no lo cuantificó.
+
+### Cuánto inflan los duplicados las métricas: la ablación del proyecto
+
+Para medir el efecto, se entrenó el mismo XGBoost base con tres protocolos de limpieza, y se midió qué parte de la prueba ya estaba en el entrenamiento:
+
+- **Ingenuo**: solo se quita lo imprescindible (infinitos y NaN); se conservan los duplicados.
+- **Sin duplicados**: se quitan los duplicados exactos.
+- **Completo** (el del proyecto): sin duplicados ni contradictorios, convirtiendo a `float32` antes.
+
+Resultados en UNSW-NB15:
+
+{{>tabla_fuga unsw}}
+
+Y en CICIDS2017:
+
+{{>tabla_fuga cic}}
+
+::: {.figura-mediana}
+![Con el protocolo ingenuo, buena parte de la prueba ya estaba en el entrenamiento; en UNSW-NB15 eso infla la accuracy y el Recall](figuras/fuga_de_datos.png)
+:::
+
+Lectura: en UNSW-NB15, el protocolo ingenuo deja {{unsw.l.naive.leaked_test_share_pct}} de la prueba ya vista y sobrestima el Recall ({{unsw.l.naive.recall}} frente a {{unsw.l.full.recall}} con el protocolo del proyecto). En CICIDS2017 los duplicados también existen, pero casi no cambian la medición ({{cic.l.naive.recall}} frente a {{cic.l.full.recall}}) porque el dataset ya es casi perfectamente separable: hasta con la fuga o sin ella el modelo acierta casi todo. Es una ablación con **un solo modelo y una sola semilla**, así que da evidencia de magnitud y no una prueba estadística.
+
+### Las particiones oficiales de UNSW-NB15
+
+UNSW-NB15 viene con una partición oficial en entrenamiento (175 341 flujos) y prueba (82 332). Es lo que usa gran parte de la literatura, así que se evaluó el proyecto también así, con y sin depurar, y con validación cruzada de 5 pliegues sobre el entrenamiento oficial:
+
+{{>tabla_oficial}}
+
+Tres lecturas, sin sobreinterpretar:
+
+1. **Partición oficial frente a reparto aleatorio.** Con las particiones oficiales, XGBoost base obtiene una accuracy de {{unsw.o.A_oficial_ingenuo.xgb_baseline.accuracy}} y un FPR de {{unsw.o.A_oficial_ingenuo.xgb_baseline.fpr}}, bastante peor que con el reparto aleatorio del proyecto, donde el mismo modelo base obtiene una accuracy de {{unsw.m.xgb_baseline.default.accuracy}} y un FPR de {{unsw.m.xgb_baseline.default.fpr}}. Eso sugiere que la partición oficial de prueba es **distinta** de la de entrenamiento (un cambio de distribución), y que un reparto aleatorio es una prueba más fácil. No se investigó la causa.
+2. **Los duplicados inflan, pero no explican todo.** En la validación cruzada de 5 pliegues, sin depurar, XGBoost base alcanza una accuracy de {{unsw.o.C_cv5_ingenuo.xgb_baseline.accuracy}}, con {{unsw.o.C_cv5_ingenuo.xgb_baseline.leaked_pct}} de las filas de cada pliegue de prueba ya vistas; depurado, {{unsw.o.C_cv5_depurado.xgb_baseline.accuracy}}. La diferencia entre las dos cifras es el efecto de los duplicados en esa validación cruzada, y es real, pero ni el valor inflado llega al 0.97 que reporta Alkhater (2026) en el resumen de su estudio.
+3. **Por qué importa lo anterior.** La **hipótesis** de que los duplicados por sí solos explicaban esa cifra de la literatura **no se confirmó**. Su protocolo exacto no pudo verificarse (solo se pudo leer su resumen), así que no se puede atribuir la diferencia a una causa concreta. Es un buen ejemplo de por qué no hay que forzar una explicación.
+
+### Filtro de correlación
+
+Muchas variables llevan la misma información. En UNSW-NB15, por ejemplo, `sbytes` (bytes del origen) y `sloss` (paquetes perdidos del origen) tienen una correlación cercana a 1 en el análisis exploratorio. Variables redundantes no ayudan al modelo, lo hacen más pesado y reparten la importancia entre ellas.
+
+El **filtro de correlación** del proyecto, en la versión mejorada, recorre las variables en orden y **descarta** cualquiera cuya correlación absoluta (de Pearson) con una variable ya conservada supere 0.95. Se ajusta **solo con el entrenamiento**. En el modelo ganador descarta {{unsw.filter.dropped}} columnas en UNSW-NB15 y {{cic.filter.dropped}} en CICIDS2017 (contadas después de codificar las categóricas). El ejemplo C.9 lo resuelve en miniatura.
+
+### Variables categóricas: one-hot
+
+`proto`, `service` y `state` son textos. Se convierten con **one-hot**: cada categoría se vuelve una columna de 0 y 1 (por ejemplo `proto_tcp` vale 1 si el protocolo es TCP). Se prefiere a numerar las categorías (tcp=1, udp=2, ...) porque numerar inventa un **orden** que no existe. Las categorías que aparecen en menos del 1 % de las filas de entrenamiento, y las nunca vistas, van a una columna "infrecuente", de modo que un valor nuevo no rompe la predicción. En UNSW-NB15 `proto` tiene 133 valores distintos.
+
+### Por qué no hace falta escalar
+
+Escalar (llevar todas las variables a un rango parecido) es esencial para modelos como las redes neuronales o las SVM, que dependen de distancias o de productos. Los **árboles** solo comparan una variable con un umbral, así que no les afecta que `sbytes` valga millones y `dur` valga fracciones: el orden de los valores no cambia. Por eso el proyecto no escala (el Entregable 1 menciona `StandardScaler` o `MinMaxScaler`, pero para los árboles es innecesario; existe una función de escalado en el repositorio por si se añadieran modelos que lo necesiten).
+
+### Columnas constantes y repetidas
+
+Una variable que vale lo mismo en todos los flujos no aporta nada. CICIDS2017 trae {{cic.clean.constant}} columnas constantes, que se eliminan, y una columna repetida con otro nombre (`Fwd Header Length` aparece dos veces; el código **comprueba** que son idénticas antes de descartar una).
+
+### Aprendizaje por atajos
+
+::: definicion
+**Aprendizaje por atajos** (*shortcut learning*): el modelo se apoya en variables que separan las clases **por un accidente de cómo se recolectaron los datos** y no por la naturaleza del ataque. Funciona en el dataset pero no se sostiene fuera de él.
+:::
+
+Engelen et al. (2021) estudiaron CICIDS2017 y encontraron problemas de generación de tráfico, construcción de flujos, extracción de variables y etiquetado. Entre ellos, los "apéndices TCP" (flujos espurios de ACK y FIN al final de una conexión), que representan el 25.9 % del dataset. Mostraron que un Random Forest usaba variables sin relación semántica con el ataque (`Fwd Header Len`, `Total Fwd Pkt`, `Min Seg Size Fwd`, `Init Win bytes Fwd`, `SYN Flag Count`, `Bwd Pkt Len Mean`). Lanvin et al. (2023) señalan fallos parecidos: errores de etiquetado, paquetes desordenados y duplicados, y ataques ejecutados pero mal etiquetados.
+
+**Qué hizo el proyecto.** No puede corregir el dataset (eso exigiría reprocesar los archivos de captura), pero sí puede **probar si el rendimiento depende de las variables sospechosas**: reentrenó el XGBoost sin cada grupo y volvió a elegir los umbrales en validación.
+
+UNSW-NB15 (sin variables de TTL, sin el estado, sin ambos, sin las categóricas):
+
+{{>tabla_ablacion unsw}}
+
+CICIDS2017 (sin `Destination Port`, sin las seis variables que Engelen et al. señalan):
+
+{{>tabla_ablacion cic}}
+
+Lectura:
+
+- **UNSW-NB15**: quitar los grupos sospechosos (`sttl`, `dttl`, `ct_state_ttl`, `state` y las categóricas) **casi no cambia** los resultados: el FPR con Recall >= 0.95 va de {{unsw.a.completo.recall_target.fpr}} a valores entre {{unsw.a.sin_ttl_sttl_dttl_ct_state_ttl.recall_target.fpr}} y {{unsw.a.sin_categoricas_proto_service_state.recall_target.fpr}}. El rendimiento **no depende** de esas variables.
+- **CICIDS2017**: sin las seis variables de Engelen et al., el Recall con umbral 0.5 baja de {{cic.a.completo.default.recall}} a {{cic.a.sin_atajos_de_engelen_et_al_2021.default.recall}} y el FPR sube de {{cic.a.completo.default.fpr}} a {{cic.a.sin_atajos_de_engelen_et_al_2021.default.fpr}}; sin `Destination Port` el Recall es {{cic.a.sin_destination_port.default.recall}} y el FPR {{cic.a.sin_destination_port.default.fpr}}. Son empeoramientos pequeños: el dataset sigue siendo casi perfectamente separable con las demás variables.
+
+::: advertencia
+Que el rendimiento no baje al quitar un grupo **no prueba** que el modelo no use atajos: otras variables correlacionadas pueden tomar su lugar. Sí prueba que el rendimiento **no depende de ese grupo concreto**. Es la afirmación honesta que se puede hacer.
+:::
+
+## A.8 Búsqueda de hiperparámetros y elección del umbral
+
+### Parámetros frente a hiperparámetros
+
+- Los **parámetros** son lo que el modelo **aprende** de los datos (las divisiones de los árboles, los valores de las hojas).
+- Los **hiperparámetros** son lo que **se fija antes** de entrenar y controla cómo aprende (número de árboles, profundidad, tasa de aprendizaje). No se aprenden: hay que **buscarlos**.
+
+Elegirlos bien importa, pero hay que hacerlo **sin mirar la prueba** (A.2).
+
+### Cuadrícula frente a búsqueda aleatoria
+
+Hay dos estrategias básicas para explorar combinaciones:
+
+- **Búsqueda en cuadrícula** (*grid search*): probar **todas** las combinaciones. Es exhaustiva pero crece muy rápido.
+- **Búsqueda aleatoria** (*random search*): sortear un número fijo de combinaciones al azar. Cubre bien el espacio con mucho menos costo, y suele alcanzar resultados parecidos.
+
+El espacio de búsqueda del proyecto (A.4 y A.5) tiene $3 \times 4 \times 3 \times 2 = 72$ combinaciones para el Random Forest y $3 \times 4 \times 3 \times 3 \times 3 \times 3 = 972$ para XGBoost. El proyecto prueba **8** candidatos al azar por algoritmo: una fracción pequeña del espacio (11 % y menos del 1 %). Es una decisión de costo, y también una limitación.
+
+### Cómo se evalúa cada candidato
+
+Cada combinación se evalúa con **validación cruzada estratificada de 5 pliegues** (el Entregable 1 lo pide): se ajusta la combinación en 4 trozos de los datos de entrenamiento y se mide en el quinto, cinco veces, y se promedia. Dos detalles que evitan fugas:
+
+1. **Todo el `Pipeline` se reajusta en cada pliegue**: el codificador, el filtro de correlación y el clasificador. Nada aprendido de un pliegue de evaluación se usa para ajustar.
+2. La métrica de la búsqueda es la **precisión promedio** (*average precision*, el área bajo la curva precisión-recall, A.6), que **no depende del umbral** y es sensible a la clase positiva.
+
+La mejor combinación se **reentrena con todo el entrenamiento** y es la que forma la versión **mejorada** del modelo.
+
+### La muestra de ajuste
+
+Buscar con 1.7 millones de flujos (CICIDS2017) es muy caro: 8 candidatos por 5 pliegues son 40 entrenamientos. Por eso la búsqueda usa una **muestra estratificada de 60 000 flujos** del entrenamiento; solo el reentrenamiento final usa todo. El costo total de las versiones mejoradas (búsqueda más reentrenamiento) frente a las base se ve en los tiempos de ajuste:
+
+| Dataset | Random Forest base | Random Forest mejorado | XGBoost base | XGBoost mejorado |
+|---|---|---|---|---|
+| UNSW-NB15 | {{unsw.fit.rf_baseline}} s | {{unsw.fit.rf_improved}} s | {{unsw.fit.xgb_baseline}} s | {{unsw.fit.xgb_improved}} s |
+| CICIDS2017 | {{cic.fit.rf_baseline}} s | {{cic.fit.rf_improved}} s | {{cic.fit.xgb_baseline}} s | {{cic.fit.xgb_improved}} s |
+
+### Elegir el umbral y el modelo, en validación
+
+Una vez ajustado el modelo con el entrenamiento, **en validación** se hacen dos elecciones:
+
+1. **Los umbrales** de los tres puntos de operación (cada modelo tiene los suyos; el Mix también).
+2. **El modelo ganador**: el de menor FPR de validación entre los que alcanzan Recall >= 0.95 en validación (en caso de empate, el de mayor F1). Existe además un segundo "ganador" bajo la regla del presupuesto de FPR.
+
+Solo entonces se mide la **prueba**, una vez, para reportar. Así la prueba no influye en ninguna elección.
+
+::: ejemplo
+Un efecto visible de elegir el umbral en validación: el presupuesto de FPR es 0.02, pero en la prueba el modelo ganador de UNSW-NB15 muestra un FPR de {{unsw.m.xgb_improved.fpr_budget.fpr}} en ese punto. Es ligeramente mayor porque el umbral se fijó con otra muestra (la validación), y el FPR cambia un poco de una muestra a otra. No es un error: es el ruido de muestreo.
+:::
+
+### Limitaciones, dichas con claridad
+
+1. **Búsqueda pequeña**: 8 candidatos por algoritmo.
+2. **Ajuste con una muestra**: lo que funciona con 60 000 flujos puede no ser lo mejor con 1.7 millones (una explicación plausible, no verificada, de por qué el Random Forest mejorado resultó peor que el base en CICIDS2017).
+3. **La búsqueda no se repite por semilla**: en el experimento con 5 semillas se reutilizan los hiperparámetros encontrados con la semilla 42. Por eso la desviación estándar entre semillas **subestima** la variación real, y además los datos con los que se ajustó la semilla 42 se solapan con las pruebas de las otras semillas (una fuga leve y limitada a la elección de hiperparámetros).
+4. **El umbral se calibra con una validación finita**, y por eso su efecto en la prueba tiene ruido.
+
+## A.9 Los dos datasets
+
+### Vista rápida
+
+| | UNSW-NB15 | CICIDS2017 |
+|---|---|---|
+| Origen | Universidad de Nueva Gales del Sur (Moustafa y Slay, 2015); ataques sintéticos en laboratorio | Canadian Institute for Cybersecurity (Sharafaldin et al., 2018); tráfico capturado en un entorno de laboratorio (así lo describe el Entregable 1) y convertido en flujos con CICFlowMeter |
+| Rol en el proyecto | Principal (Entregable 1) | Contraste y verificación de estabilidad |
+| Flujos usados (crudos) | {{unsw.clean.rows_raw}} | {{cic.clean.rows_raw}} |
+| Flujos tras la limpieza | {{unsw.clean.rows_final}} | {{cic.clean.rows_final}} |
+| Variables tras la limpieza | {{unsw.clean.n_features}} (39 numéricas y 3 categóricas) | {{cic.clean.n_features}} (numéricas) |
+| Familias de ataque | 9, más tráfico normal | 14, más tráfico normal |
+| Prevalencia de ataques (limpio) | {{unsw.clean.attack_pct}} | {{cic.clean.attack_pct}} |
+| Problema principal | Más del 40 % de filas redundantes; clases solapadas; cambio entre particiones oficiales | Errores documentados de construcción de flujos y etiquetado; casi saturado |
+
+### UNSW-NB15
+
+- **Tamaño.** El dataset completo tiene 2 540 044 registros en cuatro archivos CSV; para aprendizaje automático se publican dos particiones, de **entrenamiento (175 341 flujos)** y de **prueba (82 332)**. El proyecto usa esas dos particiones (257 673 flujos en total). El Entregable 1 cita la cifra del dataset completo; la cifra de los archivos usados es la segunda.
+- **Variables.** Las particiones no traen direcciones IP, puertos ni marcas de tiempo; solo 42 variables de comportamiento del flujo más un identificador, `attack_cat` y `label`. Tres son categóricas: `proto` (protocolo), `service` (aplicación) y `state` (estado de la conexión).
+- **Familias de ataque** (nueve): *Fuzzers*, *Analysis*, *Backdoor*, *DoS*, *Exploits*, *Generic*, *Reconnaissance*, *Shellcode* y *Worms*. El Entregable 1 menciona una lista distinta; las nueve anteriores son las que aparecen en la página oficial y en los datos.
+- **Un detalle de la fuente.** El espejo desde el que se descarga tiene los nombres de los archivos intercambiados: `test.csv` contiene la partición oficial de **entrenamiento**. El proyecto las une y las reparte de nuevo (y el experimento de particiones oficiales las identifica por tamaño, no por nombre).
+
+Flujos por familia antes y después de la limpieza:
+
+| Familia | Crudo | Limpio |
+|---|---|---|
+| Normal (BENIGN) | {{unsw.famraw.benign}} | {{unsw.fam.benign}} |
+| Exploits | {{unsw.famraw.exploits}} | {{unsw.fam.exploits}} |
+| Fuzzers | {{unsw.famraw.fuzzers}} | {{unsw.fam.fuzzers}} |
+| Reconnaissance | {{unsw.famraw.reconnaissance}} | {{unsw.fam.reconnaissance}} |
+| Generic | {{unsw.famraw.generic}} | {{unsw.fam.generic}} |
+| DoS | {{unsw.famraw.dos}} | {{unsw.fam.dos}} |
+| Shellcode | {{unsw.famraw.shellcode}} | {{unsw.fam.shellcode}} |
+| Analysis | {{unsw.famraw.analysis}} | {{unsw.fam.analysis}} |
+| Backdoor | {{unsw.famraw.backdoor}} | {{unsw.fam.backdoor}} |
+| Worms | {{unsw.famraw.worms}} | {{unsw.fam.worms}} |
+
+Se nota que la limpieza afecta de forma muy distinta a cada familia: la familia *Generic* pierde la mayor parte de sus flujos porque eran en su mayoría duplicados.
+
+### CICIDS2017
+
+- **Origen y forma.** Tráfico capturado durante cinco días (de lunes a viernes; así lo indican los nombres de los archivos) y convertido en flujos con **CICFlowMeter**. El Entregable 1 lo describe como tráfico de una red simulada en laboratorio. Los archivos `MachineLearningCSV` (ocho CSV, por día y franja horaria) traen 78 columnas de variables (una de ellas repetida) más la etiqueta.
+- **Familias de ataque** (catorce): *DoS Hulk*, *DDoS*, *PortScan*, *DoS GoldenEye*, *FTP-Patator*, *SSH-Patator*, *DoS slowloris*, *DoS Slowhttptest*, *Bot*, tres de ataques web (*Brute Force*, *XSS*, *SQL Injection*), *Infiltration* y *Heartbleed*.
+- **Fuente.** El enlace oficial del Canadian Institute for Cybersecurity pide un formulario de registro y no se puede automatizar, por lo que el proyecto descarga los mismos archivos desde un espejo fijado a una revisión concreta, con verificación SHA256.
+
+Flujos por familia antes y después de la limpieza:
+
+| Familia | Crudo | Limpio |
+|---|---|---|
+| Normal (BENIGN) | {{cic.famraw.benign}} | {{cic.fam.benign}} |
+| DoS Hulk | {{cic.famraw.dos_hulk}} | {{cic.fam.dos_hulk}} |
+| DDoS | {{cic.famraw.ddos}} | {{cic.fam.ddos}} |
+| PortScan | {{cic.famraw.portscan}} | {{cic.fam.portscan}} |
+| DoS GoldenEye | {{cic.famraw.dos_goldeneye}} | {{cic.fam.dos_goldeneye}} |
+| FTP-Patator | {{cic.famraw.ftp_patator}} | {{cic.fam.ftp_patator}} |
+| DoS slowloris | {{cic.famraw.dos_slowloris}} | {{cic.fam.dos_slowloris}} |
+| DoS Slowhttptest | {{cic.famraw.dos_slowhttptest}} | {{cic.fam.dos_slowhttptest}} |
+| SSH-Patator | {{cic.famraw.ssh_patator}} | {{cic.fam.ssh_patator}} |
+| Bot | {{cic.famraw.bot}} | {{cic.fam.bot}} |
+| Web Attack Brute Force | {{cic.famraw.web_attack_brute_force}} | {{cic.fam.web_attack_brute_force}} |
+| Web Attack XSS | {{cic.famraw.web_attack_xss}} | {{cic.fam.web_attack_xss}} |
+| Infiltration | {{cic.famraw.infiltration}} | {{cic.fam.infiltration}} |
+| Web Attack SQL Injection | {{cic.famraw.web_attack_sql_injection}} | {{cic.fam.web_attack_sql_injection}} |
+| Heartbleed | {{cic.famraw.heartbleed}} | {{cic.fam.heartbleed}} |
+
+Familias con muy pocos flujos (*Heartbleed*, *SQL Injection*, *Infiltration*) hacen que cualquier tasa de detección de esas familias sea inestable.
+
+### Problemas conocidos de CICIDS2017
+
+Engelen et al. (2021) y Lanvin et al. (2023) documentan fallos de construcción de flujos y de etiquetado. El proyecto **no los corrige** (exigiría reprocesar los archivos de captura) y debe declararlos como una **amenaza a la validez**: los resultados de CICIDS2017 pueden estar influidos por esos errores. Además, como el dataset es casi perfectamente separable, sirve poco para distinguir un algoritmo de otro: por eso se usa como **contraste** y el dataset principal es UNSW-NB15.
+
+::: {.figura-mediana}
+![Qué parte de cada dataset elimina la limpieza: duplicados, contradictorios e infinitos](figuras/embudo_limpieza.png)
+:::
+
+## A.10 Qué recordar de la Parte A
+
+1. Un IDS **detecta y avisa**; el proyecto es un NIDS que trabaja con **flujos** resumidos en fichas de variables, con aprendizaje supervisado.
+2. El modelo devuelve una **probabilidad**; el **umbral** la convierte en decisión y cada umbral es un compromiso entre **Recall** (ataques detectados) y **FPR** (falsas alarmas).
+3. Entrenamiento ajusta, validación decide, prueba mide **una sola vez**. Todo lo que se ajusta con datos (filtro, codificador, hiperparámetros, umbrales) se hace sin la prueba.
+4. **Random Forest** promedia muchos árboles independientes; **XGBoost** suma árboles pequeños que corrigen a los anteriores; el **Mix** promedia las probabilidades de ambos.
+5. La **accuracy engaña** con clases desbalanceadas; la **precisión depende de la prevalencia**; por eso se reportan Recall y FPR, y se comparan varios puntos de operación.
+6. El **AUC** no depende del umbral; los tres puntos de operación son lugares distintos de la misma curva.
+7. Los **intervalos bootstrap** miden el ruido de muestreo de la prueba; la **prueba pareada** detecta diferencias pequeñas que los intervalos separados ocultan, pero un $p$ pequeño no significa una diferencia grande.
+8. **Fuga de datos**: duplicados entre conjuntos, transformar con todos los datos, decidir con la prueba y variables que delatan la etiqueta. El proyecto la evita y mide cuánto inflaba: mucho en UNSW-NB15, casi nada en CICIDS2017 (que está casi saturado).
+9. La **partición oficial** de UNSW-NB15 da resultados mucho peores que un reparto aleatorio, y los duplicados **no** explican por sí solos las cifras altas de la literatura.
+10. Todo tiene **límites** declarados: una semilla para la búsqueda de hiperparámetros, búsqueda pequeña, datasets de laboratorio, errores conocidos en CICIDS2017, sin captura en vivo, sin ataques nuevos.
