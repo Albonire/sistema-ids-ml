@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 from src import config
-from src.data_loader import make_splits, split_features_target
+from src.data_loader import make_splits
 from src.features import split_column_types
 from src.metrics import compute_metrics
 from src.models import attack_scores, build_pipeline
