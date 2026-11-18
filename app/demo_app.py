@@ -109,7 +109,7 @@ def tab_data(context: demo.DemoContext) -> None:
     funnel = demo.cleaning_funnel(report)
     funnel["label"] = [
         f"{step}: {fmt_int(rows)} ({fmt_pct(share)})"
-        for step, rows, share in zip(funnel["step"], funnel["rows"], funnel["share"])
+        for step, rows, share in zip(funnel["step"], funnel["rows"], funnel["share"], strict=False)
     ]
     order = ["Flujos limpios", "Duplicados", "Infinitos o NaN", "Contradictorios"]
     funnel["order"] = funnel["step"].map(order.index)
@@ -430,7 +430,9 @@ def roc_chart(
 
 def family_chart(table: pd.DataFrame) -> alt.Chart:
     attacks = table[table["family"] != config.BENIGN_LABEL].copy()
-    attacks["label"] = [f"{family} (n={fmt_int(n)})" for family, n in zip(attacks["family"], attacks["n"])]
+    attacks["label"] = [
+        f"{family} (n={fmt_int(n)})" for family, n in zip(attacks["family"], attacks["n"], strict=False)
+    ]
     bars = (
         alt.Chart(attacks)
         .mark_bar(cornerRadiusEnd=4, height=14, color=BLUE)
@@ -665,7 +667,9 @@ def tab_leakage(context: demo.DemoContext) -> None:
                 alt.Tooltip("rows:Q", title="Filas", format=","),
             ]
         )
-        text = base.mark_text(align="left", dx=5, color=MUTED, fontSize=12).encode(text=alt.Text(f"{field}:Q", format=fmt))
+        text = base.mark_text(align="left", dx=5, color=MUTED, fontSize=12).encode(
+            text=alt.Text(f"{field}:Q", format=fmt)
+        )
         return (bars + text).properties(height=150)
 
     left, right = st.columns(2)

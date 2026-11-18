@@ -39,22 +39,27 @@ class DatasetSource:
 
     @property
     def raw_dir(self) -> Path:
+        """Directory with the raw files of this dataset."""
         return RAW_DIR / self.key
 
     @property
     def processed_file(self) -> Path:
+        """Parquet file written by the cleaning step."""
         return PROCESSED_DIR / f"{self.key}_clean.parquet"
 
     @property
     def cleaning_report_file(self) -> Path:
+        """JSON report written by the cleaning step."""
         return PROCESSED_DIR / f"{self.key}_cleaning_report.json"
 
     @property
     def models_dir(self) -> Path:
+        """Directory with the trained model and the saved scores."""
         return MODELS_DIR / self.key
 
     @property
     def reports_dir(self) -> Path:
+        """Directory with the metrics, figures and Spanish reports."""
         return REPORTS_DIR / self.key
 
 

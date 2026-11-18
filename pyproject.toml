@@ -1,0 +1,21 @@
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = [".venv", "notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# The SHA256 digests of the datasets are single long literals.
+"src/config.py" = ["E501"]
+# Figure and table scripts keep long literal strings on one line.
+"docs/entrega/*.py" = ["E501"]
+
+[tool.mypy]
+ignore_missing_imports = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

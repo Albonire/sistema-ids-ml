@@ -85,6 +85,7 @@ def classify(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Classify network flows as normal or attack.")
     parser.add_argument("--dataset", choices=list(config.DATASETS), required=True)
     source = parser.add_mutually_exclusive_group(required=True)

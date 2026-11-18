@@ -69,7 +69,11 @@ def test_bootstrap_interval_brackets_point_estimate_and_shrinks_with_n() -> None
     for m in (small, large):
         low, high = bootstrap_intervals(m)["fpr"]
         assert low <= m.fpr <= high
-    width = lambda m: np.subtract(*bootstrap_intervals(m)["fpr"][::-1])
+
+    def width(m) -> float:
+        low, high = bootstrap_intervals(m)["fpr"]
+        return high - low
+
     assert width(large) < width(small)
 
 

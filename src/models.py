@@ -42,15 +42,13 @@ XGB_SEARCH_SPACE: dict[str, list[Any]] = {
 }
 
 
-def _classifier(algorithm: Algorithm) -> Any:
+def _classifier(algorithm: Algorithm, random_state: int = config.RANDOM_STATE) -> Any:
     if algorithm == "rf":
-        return RandomForestClassifier(
-            n_estimators=100, random_state=config.RANDOM_STATE, n_jobs=-1
-        )
+        return RandomForestClassifier(n_estimators=100, random_state=random_state, n_jobs=-1)
     return XGBClassifier(
         n_estimators=100,
         max_depth=5,
-        random_state=config.RANDOM_STATE,
+        random_state=random_state,
         n_jobs=-1,
         tree_method="hist",
         eval_metric="logloss",
@@ -62,6 +60,7 @@ def build_pipeline(
     numeric_columns: list[str],
     categorical_columns: list[str],
     improved: bool,
+    random_state: int = config.RANDOM_STATE,
 ) -> Pipeline:
     """Build an unfitted pipeline: encoding, optional correlation filter, classifier."""
     steps: list[tuple[str, Any]] = [
@@ -69,11 +68,12 @@ def build_pipeline(
     ]
     if improved:
         steps.append(("filter", CorrelationFilter()))
-    steps.append(("clf", _classifier(algorithm)))
+    steps.append(("clf", _classifier(algorithm, random_state)))
     return Pipeline(steps)
 
 
 def search_space(algorithm: Algorithm) -> dict[str, list[Any]]:
+    """Hyperparameter search space of an algorithm."""
     return RF_SEARCH_SPACE if algorithm == "rf" else XGB_SEARCH_SPACE
 
 
@@ -89,8 +89,10 @@ class SoftVotingEnsemble:
     members: list[Any]
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        """Class probabilities averaged over the members, as an (n, 2) array."""
         attack = np.mean([attack_scores(member, X) for member in self.members], axis=0)
         return np.column_stack([1.0 - attack, attack])
 
     def predict(self, X: pd.DataFrame, threshold: float = 0.5) -> np.ndarray:
+        """Hard decisions at a threshold on the averaged attack probability."""
         return (attack_scores(self, X) >= threshold).astype(int)

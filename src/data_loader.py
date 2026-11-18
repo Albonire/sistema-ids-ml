@@ -33,6 +33,7 @@ class DataSplits:
 
     @property
     def feature_names(self) -> list[str]:
+        """Names of the feature columns."""
         return list(self.train.X.columns)
 
 

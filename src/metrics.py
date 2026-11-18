@@ -26,6 +26,7 @@ class Metrics:
     threshold: float
 
     def to_dict(self) -> dict[str, float | int]:
+        """The metrics as a plain dictionary."""
         return asdict(self)
 
 
@@ -150,3 +151,58 @@ def bootstrap_intervals(
         name: (float(np.quantile(values, alpha)), float(np.quantile(values, 1.0 - alpha)))
         for name, values in samples.items()
     }
+
+
+def paired_bootstrap_difference(
+    y_true: np.ndarray,
+    scores_a: np.ndarray,
+    threshold_a: float,
+    scores_b: np.ndarray,
+    threshold_b: float,
+    n_boot: int = 2000,
+    seed: int = 42,
+    level: float = 0.95,
+) -> dict[str, dict[str, float]]:
+    """Paired bootstrap of the recall and FPR difference (A minus B) on the same test rows.
+
+    Each model is evaluated at its own threshold. Resampling n rows with replacement makes
+    the eight joint cells (true class, decision of A, decision of B) follow a multinomial
+    distribution, so the exact bootstrap works on cell counts. For each metric the result
+    has the point difference, its percentile interval and a two-sided bootstrap p-value
+    (twice the smaller tail around zero, capped at 1). It captures test-sampling noise only.
+    """
+    y = np.asarray(y_true).astype(int)
+    a = (np.asarray(scores_a) >= threshold_a).astype(int)
+    b = (np.asarray(scores_b) >= threshold_b).astype(int)
+    codes = y * 4 + a * 2 + b
+    counts = np.bincount(codes, minlength=8).astype(float)
+    total = counts.sum()
+    rng = np.random.default_rng(seed)
+    draws = rng.multinomial(int(total), counts / total, size=n_boot).astype(float)
+
+    def rates(cells: np.ndarray) -> dict[str, np.ndarray]:
+        # cells index = y * 4 + a * 2 + b; columns 4..7 are attacks, 0..3 are normal flows.
+        """Recall and FPR of both models for every row of cell counts."""
+        attacks = cells[:, 4:].sum(axis=1)
+        normals = cells[:, :4].sum(axis=1)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return {
+                "recall_a": np.nan_to_num(cells[:, [6, 7]].sum(axis=1) / attacks),
+                "recall_b": np.nan_to_num(cells[:, [5, 7]].sum(axis=1) / attacks),
+                "fpr_a": np.nan_to_num(cells[:, [2, 3]].sum(axis=1) / normals),
+                "fpr_b": np.nan_to_num(cells[:, [1, 3]].sum(axis=1) / normals),
+            }
+
+    point = rates(counts[None, :])
+    boot = rates(draws)
+    alpha = (1.0 - level) / 2.0
+    result: dict[str, dict[str, float]] = {}
+    for metric in ("recall", "fpr"):
+        difference = boot[f"{metric}_a"] - boot[f"{metric}_b"]
+        result[metric] = {
+            "difference": float((point[f"{metric}_a"] - point[f"{metric}_b"])[0]),
+            "low": float(np.quantile(difference, alpha)),
+            "high": float(np.quantile(difference, 1.0 - alpha)),
+            "p_value": float(min(1.0, 2.0 * min(np.mean(difference <= 0), np.mean(difference >= 0)))),
+        }
+    return result

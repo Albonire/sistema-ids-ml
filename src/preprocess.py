@@ -184,7 +184,7 @@ def clean(
     report.constant_columns_dropped = constant
 
     report.negative_value_counts = {
-        column: int(count)
+        str(column): int(count)
         for column, count in (frame[numeric] < 0).sum().items()
         if count > 0
     }
@@ -225,6 +225,7 @@ def run(dataset: config.DatasetSource = config.CICIDS2017) -> CleaningReport:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command line entry point."""
     parser = argparse.ArgumentParser(description="Clean the raw dataset files.")
     parser.add_argument("--dataset", choices=[*config.DATASETS, "all"], default="all")
     args = parser.parse_args(argv)
