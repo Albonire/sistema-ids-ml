@@ -5,7 +5,7 @@
 - **Proyecto**: Sistema Inteligente de Detección de Intrusiones de Red (IDS) basado en Machine Learning.
 - **Asignatura**: Seguridad Informática (Programa académico de 16 semanas).
 - **Equipo de trabajo**:
-  - Fabian (Coordinación, Arquitectura de Software y Pipeline)
+  - Fabian - GitHub: `Albonire` (Coordinación, Arquitectura de Software y Pipeline)
   - Silvana - GitHub: `inana20` (Investigación, Preprocesamiento y Modelos)
   - Raul - GitHub: `Raul-2112` (Métricas, Evaluación de Resultados y Documentación)
 - **Fase actual**: Cierre del proyecto (Entregable 3): experimentación formal, informe final y sustentación. El prototipo, la demostración y los experimentos ya están implementados. El Entregable 1 (`Entregable1_IDS_Proyecto_actualizado.docx`) ya fue presentado a la docente.

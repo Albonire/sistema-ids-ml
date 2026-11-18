@@ -8,7 +8,7 @@ Proyecto desarrollado para la asignatura **Seguridad Informática**.
 
 ## Integrantes del Equipo
 
-- **Fabian** (Coordinación, Arquitectura de Software y Pipeline)
+- **Fabian** (GitHub: [Albonire](https://github.com/Albonire)) (Coordinación, Arquitectura de Software y Pipeline)
 - **Silvana** (GitHub: [inana20](https://github.com/inana20)) (Investigación, Preprocesamiento y Modelos)
 - **Raul** (GitHub: [Raul-2112](https://github.com/Raul-2112)) (Métricas, Evaluación de Resultados y Documentación)
 
@@ -109,6 +109,16 @@ source .venv/bin/activate
 # Instalar dependencias
 pip install -r requirements.txt
 ```
+
+---
+
+## Documentación y Entregables
+
+Los documentos consolidados para la entrega final y sustentación se encuentran en `docs/entrega/pdf/`:
+- **Informe Final**: [docs/entrega/pdf/Informe_Final_IDS.pdf](docs/entrega/pdf/Informe_Final_IDS.pdf)
+- **Guía de Estudio**: [docs/entrega/pdf/Guia_de_Estudio_IDS.pdf](docs/entrega/pdf/Guia_de_Estudio_IDS.pdf)
+- **Guión de Sustentación**: [docs/entrega/pdf/Guion_Sustentacion_IDS.pdf](docs/entrega/pdf/Guion_Sustentacion_IDS.pdf)
+- **Contenido de Diapositivas**: [docs/entrega/pdf/Contenido_Diapositivas_IDS.pdf](docs/entrega/pdf/Contenido_Diapositivas_IDS.pdf)
 
 ---
 
