@@ -122,6 +122,28 @@ Dicho con honestidad:
 - Limitaciones: una sola semilla y partición; búsqueda de hiperparámetros acotada.
 - Siguiente: repetir con varias semillas, ablación de variables sospechosas de atajos (`sttl`, `state_INT`, `Destination Port`) e informe final.
 
+## Alternativa: demo visual en el navegador
+
+La carpeta `app/` trae una demo interactiva (Streamlit) que reúne en una sola pantalla lo que las secciones 3 a 6 muestran con comandos. Sirve si se prefiere proyectar una interfaz en lugar de la terminal.
+
+Requisitos (se generan en la sección 0): `python -m src.preprocess`, `python -m src.train` y los reportes de `reports/` (ya vienen en Git). Si falta algo, la propia app lo avisa y muestra el comando que corresponde.
+
+```bash
+streamlit run app/demo_app.py      # abre http://localhost:8501
+```
+
+La barra lateral elige el dataset y el punto de operación (umbral 0.5, mínimo FPR con Recall >= 0.95 o máximo Recall con FPR <= 0.02). Cada pestaña equivale a una parte de este guion:
+
+| Pestaña | Qué muestra | Parte del guion |
+|---|---|---|
+| 1. Datos | Flujos crudos, cuántos se eliminan en cada paso de limpieza y la distribución por tipo de tráfico | 3 |
+| 2. Clasificar en vivo | Los flujos de ejemplo (o un CSV subido, o un flujo en JSON) con su probabilidad de ataque, la decisión y si fue acierto, falsa alarma o ataque no detectado | 4 |
+| 3. Umbral interactivo | Un control deslizante del umbral que actualiza al instante Recall, FPR, matriz de confusión, curva ROC y detección por familia, con aviso de si se cumple el criterio del proyecto | 5 |
+| 4. Comparación de modelos | Los seis modelos en un mismo plano FPR contra Recall, importancia de variables y detección por familia | 5 |
+| 5. Fuga de datos | La ablación de duplicados: cuánto sube la métrica con el protocolo ingenuo | 6 |
+
+Sugerencia para la clase: en la pestaña 3 con UNSW-NB15, partir del umbral guardado de FPR <= 0.02 (FPR 0.0205, Recall 0.8238) y bajarlo hasta el de Recall 0.95 (FPR 0.1222) hace visible cómo las falsas alarmas se multiplican por seis, que es el mensaje central de la sección 5.
+
 ## Preguntas probables
 
 **¿Por qué no SVM ni redes neuronales?** El Entregable 1 los dejaba como complementarios y la docente pidió pocos modelos mejorados. `AGENT.md` ya anticipaba su alto costo computacional en datasets masivos, y no se probó en este proyecto.
