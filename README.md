@@ -26,7 +26,7 @@ Proyecto desarrollado para la asignatura **Seguridad Informática**.
 2. **XGBoost**: Gradient boosting, referencia en datos tabulares.
 3. **Mix (RF + XGBoost)**: Votación suave de ambos.
 
-Cada uno en versión **base** (configuración típica de la literatura) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral calibrado en validación).
+Cada uno en versión **base** (configuración del Entregable 1, sección 8.4) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds y umbral calibrado en validación).
 
 ---
 

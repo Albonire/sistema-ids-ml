@@ -225,7 +225,7 @@ def write_markdown(
         "el ruido de muestreo del conjunto de prueba. Dos modelos con intervalos solapados no deben "
         "considerarse distintos.",
         "",
-        "## 1. Umbral fijo 0.5 (forma habitual en la literatura)",
+        "## 1. Umbral fijo 0.5 (valor por defecto de los clasificadores)",
         "",
         "| Modelo | Accuracy | Precisión | Recall | F1 | FPR | FPR IC 95 % | ROC-AUC | PR-AUC |",
         "|---|---|---|---|---|---|---|---|---|",

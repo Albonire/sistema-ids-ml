@@ -45,7 +45,7 @@ Ojo: ese comando **sobrescribe** `models/unsw_nb15/` y `reports/unsw_nb15/`. Des
 ## 2. Qué se comparó (1 minuto)
 
 - Datasets: UNSW-NB15 (principal, el del Entregable 1) y CICIDS2017 (contraste).
-- Modelos: Random Forest, XGBoost y su mezcla por votación suave, cada uno en versión **base** (configuración típica de la literatura) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds, umbral elegido en validación).
+- Modelos: Random Forest, XGBoost y su mezcla por votación suave, cada uno en versión **base** (configuración del Entregable 1, sección 8.4) y **mejorada** (filtro de correlación, hiperparámetros por validación cruzada de 5 folds, umbral elegido en validación).
 - Partición 70/15/15 estratificada. La prueba no se usa para decidir nada.
 - Alcance acotado a pocos modelos por indicación de la docente.
 

@@ -164,6 +164,50 @@ def best_by_seed(rows: pd.DataFrame) -> dict[str, dict[str, str]]:
     return wins
 
 
+def seed_differences(rows: pd.DataFrame) -> pd.DataFrame:
+    """Improved minus baseline, seed by seed, for each algorithm and operating point.
+
+    A seed counts as an improvement when the metric that defines the point moves the right way:
+    lower FPR at the recall target, higher recall at the FPR budget, and higher recall and lower FPR
+    at the default threshold (both must improve to count).
+    """
+    test = rows[rows["split"] == "test"]
+    records: list[dict[str, Any]] = []
+    for algorithm in ("rf", "xgb", "mix"):
+        for point in OPERATING_POINTS:
+            sub = test[test["operating_point"] == point]
+            improved = sub[sub["model"] == f"{algorithm}_improved"].set_index("seed")
+            baseline = sub[sub["model"] == f"{algorithm}_baseline"].set_index("seed")
+            delta = improved[["recall", "fpr"]] - baseline[["recall", "fpr"]]
+            if point == "recall_target":
+                better = delta["fpr"] < 0
+            elif point == "fpr_budget":
+                better = delta["recall"] > 0
+            else:
+                better = (delta["recall"] > 0) & (delta["fpr"] < 0)
+            for metric in ("recall", "fpr"):
+                records.append(
+                    {
+                        "algorithm": algorithm,
+                        "operating_point": point,
+                        "metric": metric,
+                        "mean_difference": float(delta[metric].mean()),
+                        "std_difference": float(delta[metric].std()),
+                        "seeds_better": int(better.sum()),
+                        "n_seeds": len(delta),
+                    }
+                )
+    return pd.DataFrame(records)
+
+
+def run_differences(dataset_key: str) -> pd.DataFrame:
+    """Compute `multiseed_differences.csv` from the saved `multiseed.csv`."""
+    dataset = config.get_dataset(dataset_key)
+    table = seed_differences(pd.read_csv(dataset.reports_dir / "multiseed.csv"))
+    table.to_csv(dataset.reports_dir / "multiseed_differences.csv", index=False)
+    return table
+
+
 # ---------------------------------------------------------------------------------------
 # Task: seeds
 # ---------------------------------------------------------------------------------------
@@ -210,6 +254,7 @@ def run_seeds(
     rows = pd.concat(frames, ignore_index=True)
     rows.to_csv(dataset.reports_dir / "multiseed.csv", index=False)
     partial_path.unlink(missing_ok=True)
+    seed_differences(rows).to_csv(dataset.reports_dir / "multiseed_differences.csv", index=False)
     summary = summarize_seeds(rows)
     summary.to_csv(dataset.reports_dir / "multiseed_summary.csv", index=False)
     info = {
@@ -438,7 +483,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Formal experiments for the final report.")
     parser.add_argument("--dataset", choices=list(config.DATASETS), required=True)
     parser.add_argument(
-        "--task", choices=["seeds", "pairwise", "official", "features", "all"], default="all"
+        "--task", choices=["seeds", "differences", "pairwise", "official", "features", "all"], default="all"
     )
     parser.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS))
     parser.add_argument(
@@ -453,6 +498,8 @@ def main(argv: list[str] | None = None) -> int:
         started = time.perf_counter()
         if task == "seeds":
             run_seeds(args.dataset, args.seeds, args.recompute_primary)
+        elif task == "differences":
+            run_differences(args.dataset)
         elif task == "pairwise":
             run_pairwise(args.dataset)
         elif task == "official":
